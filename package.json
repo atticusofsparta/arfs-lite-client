@@ -2,21 +2,17 @@
   "name": "arfs-lite-client-main",
   "version": "1.0.0",
   "description": "Query the arweave chain for arfs files",
-  "main": "dist/index.js",
-  "module": "dist/index.m.js",
-  "unpkg": "dist/index.umd.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
   "type": "module",
   "source": "src/index.ts",
   "scripts": {
-    "build": "microbundle --tsconfig tsconfig.json --no-sourcemap",
+    "build": "microbundle --tsconfig tsconfig.json --no-sourcemap --target web",
     "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "arlocal": "^1.1.60",
     "microbundle": "^0.15.0",
     "typescript": "^5.1.6"
   },
@@ -25,7 +21,7 @@
     "@types/mime-types": "^2.1.1",
     "@types/utf8": "^3.0.1",
     "@types/uuid": "^9.0.2",
-    "arweave": "^1.13.7",
+    "arweave": "1.13.7",
     "axios": "^1.4.0",
     "base64-js": "^1.5.1",
     "bignumber.js": "^9.1.1",

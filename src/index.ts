@@ -39,7 +39,7 @@ import {
 } from "./types/arfs/file";
 import { defaultArFSClientCache } from "./types/arfs/cache";
 
-export interface ArFSClientType {
+interface ArFSClientType {
   readonly _arweave: Arweave;
   readonly appName: string;
   readonly appVersion: string;
@@ -63,7 +63,7 @@ export interface ArFSClientType {
     privateKeyData,
     latestRevisionsOnly = true,
   }:{
-    address: ArweaveAddress,
+    address: string,
     privateKeyData: PrivateKeyData,
     latestRevisionsOnly?: boolean,
   } ): Promise<ArFSDriveEntity[]>;
@@ -102,7 +102,7 @@ export interface ArFSClientType {
 //   >;
 }
 
-export class ArFSClient implements ArFSClientType {
+class ArFSClient implements ArFSClientType {
   _arweave: Arweave;
   _gatewayApi: GatewayAPI;
   _caches: typeof defaultArFSClientCache;
@@ -287,10 +287,11 @@ export class ArFSClient implements ArFSClientType {
     privateKeyData,
     latestRevisionsOnly = true,
   }:{
-    address: ArweaveAddress,
+    address: string,
     privateKeyData: PrivateKeyData,
     latestRevisionsOnly?: boolean,
   }): Promise<ArFSDriveEntity[]> {
+    const owner = new ArweaveAddress(address);
     let cursor = "";
     let hasNextPage = true;
     const allDrives: ArFSDriveEntity[] = [];
@@ -299,7 +300,7 @@ export class ArFSClient implements ArFSClientType {
       const gqlQuery = buildQuery({
         tags: [{ name: "Entity-Type", value: "drive" }],
         cursor,
-        owner: address,
+        owner
       });
 
       const transactions = await this.gatewayApi.gqlRequest(gqlQuery);
@@ -318,7 +319,7 @@ export class ArFSClient implements ArFSClientType {
           );
           const drive = await driveBuilder.build(node);
           if (drive.drivePrivacy === "public") {
-            const cacheKey = { driveId: drive.driveId, owner: address };
+            const cacheKey = { driveId: drive.driveId, owner };
             return this.caches.publicDriveCache.put(
               cacheKey,
               Promise.resolve(drive as ArFSPublicDrive),
@@ -503,4 +504,12 @@ export class ArFSClient implements ArFSClientType {
     );
     return entitiesWithPath;
   }
+}
+
+
+export {
+  ArFSClient,
+  ArFSClientType,
+  ArweaveAddress,
+  PrivateKeyData
 }
