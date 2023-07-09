@@ -198,20 +198,22 @@ export class ArFSPrivateFileWithPaths
 }
 
 export class ArFSPrivateFileWithPathsKeyless extends ArFSPrivateFileWithPaths {
-  driveKey: never;
-  fileKey: never;
+  driveKey: EntityKey;
+  fileKey: EntityKey;
 
   constructor(entity: ArFSPrivateFile, hierarchy: FolderHierarchy) {
     super(entity, hierarchy);
-    delete this.driveKey;
-    delete this.fileKey;
+    this.driveKey = new EntityKey(Buffer.from([]));
+    delete (this as { driveKey?: unknown }).driveKey;
+    this.fileKey = new EntityKey(Buffer.from([]));
+    delete (this as { fileKey?: unknown }).fileKey;
   }
 }
 
 // Remove me after PE-1027 is applied
 export class ArFSPrivateFileKeyless extends ArFSPrivateFile {
-  driveKey: never;
-  fileKey: never;
+  driveKey: EntityKey;
+  fileKey: EntityKey;
 
   constructor(entity: ArFSPrivateFile) {
     super(
@@ -236,8 +238,10 @@ export class ArFSPrivateFileKeyless extends ArFSPrivateFile {
       entity.customMetaDataGqlTags,
       entity.customMetaDataJson,
     );
-    delete this.driveKey;
-    delete this.fileKey;
+    this.driveKey = new EntityKey(Buffer.from([]));
+    delete (this as { driveKey?: unknown }).driveKey;
+    this.fileKey = new EntityKey(Buffer.from([]));
+    delete (this as { fileKey?: unknown }).fileKey;
   }
 }
 
@@ -521,7 +525,10 @@ export class ArFSFileToUpload extends ArFSDataToUpload {
     public readonly customContentType?: string,
     public readonly customMetaData?: CustomMetaData,
   ) {
+   
     super();
+    this.filePath = filePath;
+    this.fileStats = fileStats;
     if (+this.fileStats.size > +maxFileSize) {
       throw new Error(
         `Files greater than "${maxFileSize}" bytes are not yet supported!`,
@@ -529,7 +536,7 @@ export class ArFSFileToUpload extends ArFSDataToUpload {
     }
   }
 
-  public readonly sourceUri = this.filePath.fullPath ?? this.filePath.name;
+  public readonly sourceUri = "";
 
   public gatherFileInfo(): FileInfo {
     const dataContentType = this.contentType;

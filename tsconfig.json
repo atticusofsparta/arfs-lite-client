@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "module": "commonjs",
+    "target": "ESNext",
+    "module": "ESNext",
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -10,7 +10,9 @@
     "baseUrl": "./",
     "incremental": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "moduleResolution": "Node"
+    
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "test", "lib", "**/*spec.ts"]

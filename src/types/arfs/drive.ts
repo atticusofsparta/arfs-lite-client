@@ -555,7 +555,7 @@ export class SafeArFSDriveBuilder extends ArFSDriveBuilder<ArFSDriveEntity> {
 }
 
 export class ArFSPrivateDriveKeyless extends ArFSPrivateDrive {
-  driveKey: never;
+  driveKey: EntityKey;
 
   constructor(
     appName: string,
@@ -594,7 +594,8 @@ export class ArFSPrivateDriveKeyless extends ArFSPrivateDrive {
       customMetaDataGqlTags,
       customMetaDataJson,
     );
-    delete this.driveKey;
+    this.driveKey = new EntityKey(Buffer.from([]));
+    delete (this as { driveKey?: unknown }).driveKey;
   }
 }
 

@@ -119,7 +119,7 @@ export class ArFSPrivateFolder extends ArFSFileOrFolderEntity<"folder"> {
     readonly folderId: EntityID,
     readonly cipher: string,
     readonly cipherIV: string,
-    readonly driveKey: string,
+    readonly driveKey: EntityKey,
     customMetaDataGqlTags?: CustomMetaDataGqlTags,
     customMetaDataJson?: CustomMetaDataJsonFields,
   ) {
@@ -185,17 +185,18 @@ export class ArFSPrivateFolderWithPaths
 }
 
 export class ArFSPrivateFolderWithPathsKeyless extends ArFSPrivateFolderWithPaths {
-  driveKey: never;
+  driveKey: EntityKey;
 
   constructor(entity: ArFSPrivateFolder, hierarchy: FolderHierarchy) {
     super(entity, hierarchy);
-    delete this.driveKey;
+    this.driveKey = new EntityKey(Buffer.from([]));
+    delete (this as { driveKey?: unknown }).driveKey;
   }
 }
 
 // Remove me after PE-1027 is applied
 export class ArFSPrivateFolderKeyless extends ArFSPrivateFolder {
-  driveKey: never;
+  driveKey: EntityKey;
 
   constructor(entity: ArFSPrivateFolder) {
     super(
@@ -215,7 +216,8 @@ export class ArFSPrivateFolderKeyless extends ArFSPrivateFolder {
       entity.customMetaDataGqlTags,
       entity.customMetaDataJson,
     );
-    delete this.driveKey;
+    this.driveKey = new EntityKey(Buffer.from([]));
+    delete (this as { driveKey?: unknown }).driveKey;
   }
 }
 
@@ -561,7 +563,7 @@ export class ArFSFolderToUpload extends ArFSBaseEntityToUpload {
   conflictResolution: FolderConflictResolution = undefined;
 
   public readonly entityType = "folder";
-  public readonly sourceUri = this.filePath.fullPath ?? this.filePath.name;
+  public readonly sourceUri = "";
 
   constructor(
     public readonly filePath: FileSystemEntry,

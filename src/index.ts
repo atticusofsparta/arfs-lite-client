@@ -1,4 +1,5 @@
-import Arweave = require("arweave");
+import Arweave from "arweave";
+
 import {
   ArFSDriveEntity,
   ArFSPublicDrive,
