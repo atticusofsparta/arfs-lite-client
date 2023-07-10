@@ -2,7 +2,10 @@
   "name": "arfs-lite-client-main",
   "version": "1.0.0",
   "description": "Query the arweave chain for arfs files",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.m.js",
+  "unpkg": "dist/index.umd.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "source": "src/index.ts",
   "scripts": {

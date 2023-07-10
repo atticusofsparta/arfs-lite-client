@@ -133,6 +133,9 @@ export class ArFSPublicDriveBuilder extends ArFSDriveBuilder<ArFSPublicDrive> {
     gatewayApi: GatewayAPI,
   ): ArFSPublicDriveBuilder {
     const { tags } = node;
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     const driveId = tags.find((tag) => tag.name === "Drive-Id")?.value;
     if (!driveId) {
       throw new Error("Drive-ID tag missing!");
@@ -157,6 +160,9 @@ export class ArFSPublicDriveBuilder extends ArFSDriveBuilder<ArFSPublicDrive> {
   ): Promise<GQLTagInterface[]> {
     const unparsedTags: GQLTagInterface[] = [];
     const tags = await super.parseFromArweaveNode(node);
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     tags.forEach((tag: GQLTagInterface) => {
       const key = tag.name;
       const { value } = tag;
@@ -188,6 +194,7 @@ export class ArFSPublicDriveBuilder extends ArFSDriveBuilder<ArFSPublicDrive> {
       const txData = await this.getDataForTxID(this.txId);
       const dataString = await Utf8ArrayToStr(txData);
       const dataJSON = await JSON.parse(dataString);
+      console.log({txData, dataString, dataJSON})
 
       // Get the drive name and root folder id
       this.name = dataJSON.name;
@@ -251,6 +258,9 @@ export class ArFSPrivateDriveBuilder extends ArFSDriveBuilder<ArFSPrivateDrive> 
     driveKey: EntityKey,
   ): ArFSPrivateDriveBuilder {
     const { tags } = node;
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     const driveId = tags.find((tag) => tag.name === "Drive-Id")?.value;
     if (!driveId) {
       throw new Error("Drive-ID tag missing!");
@@ -268,6 +278,9 @@ export class ArFSPrivateDriveBuilder extends ArFSDriveBuilder<ArFSPrivateDrive> 
   ): Promise<GQLTagInterface[]> {
     const unparsedTags: GQLTagInterface[] = [];
     const tags = await super.parseFromArweaveNode(node);
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     tags.forEach((tag: GQLTagInterface) => {
       const key = tag.name;
       const { value } = tag;
@@ -308,8 +321,8 @@ export class ArFSPrivateDriveBuilder extends ArFSDriveBuilder<ArFSPrivateDrive> 
       this.cipherIV?.length
     ) {
       const txData = await this.getDataForTxID(this.txId);
-      const dataBuffer = Buffer.from(txData);
-      const decryptedDriveBuffer: Buffer = await driveDecrypt(
+      const dataBuffer = txData;
+      const decryptedDriveBuffer = await driveDecrypt(
         this.cipherIV,
         this.driveKey,
         dataBuffer,
@@ -395,6 +408,9 @@ export class SafeArFSDriveBuilder extends ArFSDriveBuilder<ArFSDriveEntity> {
     privateKeyData: PrivateKeyData,
   ): SafeArFSDriveBuilder {
     const { tags } = node;
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     const driveId = tags.find((tag) => tag.name === "Drive-Id")?.value;
     if (!driveId) {
       throw new Error("Drive-ID tag missing!");
@@ -413,6 +429,9 @@ export class SafeArFSDriveBuilder extends ArFSDriveBuilder<ArFSDriveEntity> {
   ): Promise<GQLTagInterface[]> {
     const unparsedTags: GQLTagInterface[] = [];
     const tags = await super.parseFromArweaveNode(node);
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     tags.forEach((tag: GQLTagInterface) => {
       const key = tag.name;
       const { value } = tag;
@@ -452,7 +471,7 @@ export class SafeArFSDriveBuilder extends ArFSDriveBuilder<ArFSDriveEntity> {
       const isPrivate = this.drivePrivacy === "private";
 
       const txData = await this.getDataForTxID(this.txId);
-      const dataBuffer = Buffer.from(txData);
+      const dataBuffer = new Uint8Array(txData);
 
       // Data JSON will be false when a private drive cannot be decrypted
       const dataJSON: DriveMetaDataTransactionData = await (async () => {
@@ -478,7 +497,7 @@ export class SafeArFSDriveBuilder extends ArFSDriveBuilder<ArFSDriveEntity> {
         }
         // Drive is public, no decryption needed
         const dataString = await Utf8ArrayToStr(txData);
-        return JSON.parse(dataString) as DriveMetaDataTransactionData;
+        return dataString as unknown as DriveMetaDataTransactionData;
       })();
 
       this.name = dataJSON.name;
@@ -590,11 +609,11 @@ export class ArFSPrivateDriveKeyless extends ArFSPrivateDrive {
       driveAuthMode,
       cipher,
       cipherIV,
-      new EntityKey(Buffer.from([])),
+      new EntityKey(new Uint8Array([])),
       customMetaDataGqlTags,
       customMetaDataJson,
     );
-    this.driveKey = new EntityKey(Buffer.from([]));
+    this.driveKey = new EntityKey(new Uint8Array([]));
     delete (this as { driveKey?: unknown }).driveKey;
   }
 }

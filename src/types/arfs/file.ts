@@ -203,9 +203,9 @@ export class ArFSPrivateFileWithPathsKeyless extends ArFSPrivateFileWithPaths {
 
   constructor(entity: ArFSPrivateFile, hierarchy: FolderHierarchy) {
     super(entity, hierarchy);
-    this.driveKey = new EntityKey(Buffer.from([]));
+    this.driveKey = new EntityKey(new Uint8Array([]));
     delete (this as { driveKey?: unknown }).driveKey;
-    this.fileKey = new EntityKey(Buffer.from([]));
+    this.fileKey = new EntityKey(new Uint8Array([]));
     delete (this as { fileKey?: unknown }).fileKey;
   }
 }
@@ -238,9 +238,9 @@ export class ArFSPrivateFileKeyless extends ArFSPrivateFile {
       entity.customMetaDataGqlTags,
       entity.customMetaDataJson,
     );
-    this.driveKey = new EntityKey(Buffer.from([]));
+    this.driveKey = new EntityKey(new Uint8Array([]));
     delete (this as { driveKey?: unknown }).driveKey;
-    this.fileKey = new EntityKey(Buffer.from([]));
+    this.fileKey = new EntityKey(new Uint8Array([]));
     delete (this as { fileKey?: unknown }).fileKey;
   }
 }
@@ -273,6 +273,9 @@ export abstract class ArFSFileBuilder<
     node?: GQLNodeInterface,
   ): Promise<GQLTagInterface[]> {
     const tags = await super.parseFromArweaveNode(node);
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     return tags.filter((tag) => tag.name !== "File-Id");
   }
 
@@ -291,6 +294,9 @@ export class ArFSPublicFileBuilder extends ArFSFileBuilder<ArFSPublicFile> {
     gatewayApi: GatewayAPI,
   ): ArFSPublicFileBuilder {
     const { tags } = node;
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     const fileId = tags.find((tag) => tag.name === "File-Id")?.value;
     if (!fileId) {
       throw new Error("File-ID tag missing!");
@@ -385,6 +391,9 @@ export class ArFSPrivateFileBuilder extends ArFSFileBuilder<ArFSPrivateFile> {
     driveKey: EntityKey,
   ): ArFSPrivateFileBuilder {
     const { tags } = node;
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     const fileId = tags.find((tag) => tag.name === "File-Id")?.value;
     if (!fileId) {
       throw new Error("File-ID tag missing!");
@@ -402,6 +411,9 @@ export class ArFSPrivateFileBuilder extends ArFSFileBuilder<ArFSPrivateFile> {
   ): Promise<GQLTagInterface[]> {
     const unparsedTags: GQLTagInterface[] = [];
     const tags = await super.parseFromArweaveNode(node);
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     tags.forEach((tag: GQLTagInterface) => {
       const key = tag.name;
       const { value } = tag;
@@ -436,11 +448,11 @@ export class ArFSPrivateFileBuilder extends ArFSFileBuilder<ArFSPrivateFile> {
       this.cipherIV?.length
     ) {
       const txData = await this.getDataForTxID(this.txId);
-      const dataBuffer = Buffer.from(txData);
+      const dataBuffer = new Uint8Array(txData);
       const fileKey =
         this.fileKey ?? (await deriveFileKey(`${this.fileId}`, this.driveKey));
 
-      const decryptedFileBuffer: Buffer = await fileDecrypt(
+      const decryptedFileBuffer: Uint8Array = await fileDecrypt(
         this.cipherIV,
         fileKey,
         dataBuffer,
@@ -554,12 +566,12 @@ export class ArFSFileToUpload extends ArFSDataToUpload {
     return new UnixTime(Math.floor(this.fileStats.lastModified / 1000));
   }
 
-  public async getFileDataBuffer(): Promise<Buffer> {
+  public async getFileDataBuffer(): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = function () {
         const arrayBuffer = reader.result as ArrayBuffer;
-        const buffer = Buffer.from(arrayBuffer);
+        const buffer = new Uint8Array(arrayBuffer);
         resolve(buffer);
       };
       reader.onerror = function () {
@@ -568,6 +580,7 @@ export class ArFSFileToUpload extends ArFSDataToUpload {
       reader.readAsArrayBuffer(this.fileStats);
     });
   }
+  
 
   public get contentType(): string {
     if (this.customContentType) {

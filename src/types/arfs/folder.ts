@@ -189,7 +189,7 @@ export class ArFSPrivateFolderWithPathsKeyless extends ArFSPrivateFolderWithPath
 
   constructor(entity: ArFSPrivateFolder, hierarchy: FolderHierarchy) {
     super(entity, hierarchy);
-    this.driveKey = new EntityKey(Buffer.from([]));
+    this.driveKey = new EntityKey(new Uint8Array([]));
     delete (this as { driveKey?: unknown }).driveKey;
   }
 }
@@ -216,7 +216,7 @@ export class ArFSPrivateFolderKeyless extends ArFSPrivateFolder {
       entity.customMetaDataGqlTags,
       entity.customMetaDataJson,
     );
-    this.driveKey = new EntityKey(Buffer.from([]));
+    this.driveKey = new EntityKey(new Uint8Array([]));
     delete (this as { driveKey?: unknown }).driveKey;
   }
 }
@@ -456,6 +456,9 @@ export abstract class ArFSFolderBuilder<
     node?: GQLNodeInterface,
   ): Promise<GQLTagInterface[]> {
     const tags = await super.parseFromArweaveNode(node);
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     return tags.filter((tag) => tag.name !== "Folder-Id");
   }
 
@@ -482,6 +485,9 @@ export class ArFSPublicFolderBuilder extends ArFSFolderBuilder<ArFSPublicFolder>
     gatewayApi: GatewayAPI,
   ): ArFSPublicFolderBuilder {
     const { tags } = node;
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     const folderId = tags.find((tag) => tag.name === "Folder-Id")?.value;
     if (!folderId) {
       throw new Error("Folder-ID tag missing!");

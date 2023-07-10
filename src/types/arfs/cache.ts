@@ -277,7 +277,7 @@ export class ArFSMetadataIDBCache {
     return this.cacheFolderPromise;
   }
 
-  static async put(txId: ArweaveAddress, buffer: Buffer): Promise<void> {
+  static async put(txId: ArweaveAddress, buffer: Uint8Array): Promise<void> {
     const db = await this.getDatabase();
 
     console.log("putting", txId);
@@ -304,10 +304,10 @@ export class ArFSMetadataIDBCache {
     });
   }
 
-  static async get(txId: ArweaveAddress): Promise<Buffer | undefined> {
+  static async get(txId: ArweaveAddress): Promise<Uint8Array | undefined> {
     const db = await this.getDatabase();
 
-    return new Promise<Buffer | undefined>((resolve, reject) => {
+    return new Promise<Uint8Array | undefined>((resolve, reject) => {
       console.log("getting", txId);
       console.log({
         cache: this.metadataCacheFolder,
@@ -322,7 +322,7 @@ export class ArFSMetadataIDBCache {
       request.onsuccess = (event) => {
         const result = request.result;
         if (result) {
-          console.debug(event)
+          console.debug(event, result)
           resolve(result.buffer);
         } else {
           resolve(undefined);

@@ -4,6 +4,7 @@ import {
   alphabeticalOrder,
   assertCustomMetaData,
   buildQuery,
+  encodeStringToArrayBuffer,
   isCustomMetaDataGqlTags,
   isCustomMetaDataJsonFields,
   urlEncodeHashKey,
@@ -97,7 +98,7 @@ const entityIdRegex = /^[a-f\d]{8}-([a-f\d]{4}-){3}[a-f\d]{12}$/i;
 
 export class EntityID implements Equatable<EntityID> {
   constructor(protected entityId: string) {
-    if (!entityId.match(entityIdRegex) && entityId !== "ENCRYPTED") {
+    if (entityId.length && !entityIdRegex.test(entityId.toString()) && entityId !== "ENCRYPTED") {
       throw new Error(`Invalid entity ID '${entityId}'!'`);
     }
   }
@@ -168,13 +169,14 @@ export class UnixTime implements Equatable<UnixTime> {
 }
 
 export class EntityKey {
-  constructor(readonly keyData: Buffer) {
-    if (!Buffer.isBuffer(keyData)) {
+  constructor(readonly keyData: Uint8Array) {
+    if (!(keyData instanceof Uint8Array)) {
       throw new Error(
-        `The argument must be of type Buffer, got ${typeof keyData}`,
+        `The argument must be of type Uint8Array, got ${typeof keyData}`,
       );
     }
   }
+
 
   toString(): string {
     return urlEncodeHashKey(this.keyData);
@@ -323,8 +325,8 @@ export abstract class ArFSMetadataEntityBuilder<T extends ArFSEntity> {
   abstract getGqlQueryParameters(): GQLTagInterface[];
   protected abstract buildEntity(): Promise<T>;
 
-  public getDataForTxID(txId: ArweaveAddress): Promise<Buffer> {
-    return this.gatewayApi.getTxData(txId);
+  public async getDataForTxID(txId: ArweaveAddress): Promise<Uint8Array> {
+    return await this.gatewayApi.getTxData(txId);
   }
 
   /**
@@ -359,6 +361,9 @@ export abstract class ArFSMetadataEntityBuilder<T extends ArFSEntity> {
     }
     this.txId = ADDR(node.id);
     const { tags } = node;
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     tags.forEach((tag: GQLTagInterface) => {
       const key = tag.name;
       const { value } = tag;
@@ -395,6 +400,9 @@ export abstract class ArFSMetadataEntityBuilder<T extends ArFSEntity> {
 
   public async build(node?: GQLNodeInterface): Promise<T> {
     const extraTags = await this.parseFromArweaveNode(node, this.owner);
+    if (!extraTags){
+      throw new Error("Tags missing!");
+    }
     this.parseCustomMetaDataFromGqlTags(extraTags);
 
     return this.buildEntity();
@@ -465,6 +473,9 @@ export abstract class ArFSFileOrFolderBuilder<
   ): Promise<GQLTagInterface[]> {
     const unparsedTags: GQLTagInterface[] = [];
     const tags = await super.parseFromArweaveNode(node);
+    if (!tags){
+      throw new Error("Tags missing!");
+    }
     tags.forEach((tag: GQLTagInterface) => {
       const key = tag.name;
       const { value } = tag;
@@ -1016,7 +1027,7 @@ export abstract class ArFSBaseEntityToUpload {
 
 export abstract class ArFSDataToUpload extends ArFSBaseEntityToUpload {
   abstract gatherFileInfo(): FileInfo;
-  abstract getFileDataBuffer(): Promise<Buffer>;
+  abstract getFileDataBuffer(): Promise<ArrayBuffer>;
 
   abstract readonly contentType: string;
   abstract readonly lastModifiedDate: UnixTime;
@@ -1142,13 +1153,16 @@ export class ArFSManifestToUpload extends ArFSDataToUpload {
     return this.destName ?? this.destManifestName;
   }
 
-  public async getFileDataBuffer(): Promise<Buffer> {
-    return Buffer.from(JSON.stringify(this.manifest));
+  public async getFileDataBuffer(): Promise<Uint8Array> {
+    const data = JSON.stringify(this.manifest);
+    return new Uint8Array(encodeStringToArrayBuffer(data));
+  }
+  
+  public get size(): ByteCount {
+    const data = JSON.stringify(this.manifest);
+    return new ByteCount(encodeStringToArrayBuffer(data).byteLength);
   }
 
-  public get size(): ByteCount {
-    return new ByteCount(Buffer.byteLength(JSON.stringify(this.manifest)));
-  }
 
   public get lastModifiedDate(): UnixTime {
     return this.lastModifiedDateMS;

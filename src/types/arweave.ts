@@ -108,7 +108,7 @@ export class PrivateKeyData {
   public async safelyDecryptToJson<T extends EntityMetaDataTransactionData>(
     cipherIV: string,
     driveId: EntityID,
-    dataBuffer: Buffer,
+    dataBuffer: Uint8Array,
     placeholder: T,
   ): Promise<T> {
     // Check for a cached key that is matching provided driveId first
@@ -172,19 +172,20 @@ export class PrivateKeyData {
    */
   public async decryptToJson<T extends EntityMetaDataTransactionData>(
     cipherIV: string,
-    encryptedDataBuffer: Buffer,
+    encryptedDataBuffer: Uint8Array,
     driveKey: EntityKey,
   ): Promise<T> {
-    const decryptedDriveBuffer: Buffer = await driveDecrypt(
+    const decryptedDriveBuffer: Uint8Array = await driveDecrypt(
       cipherIV,
       driveKey,
       encryptedDataBuffer,
     );
-    const decryptedDriveString: string = await Utf8ArrayToStr(
+    const decryptedDriveString = await Utf8ArrayToStr(
       decryptedDriveBuffer,
     );
-    return JSON.parse(decryptedDriveString);
+    return decryptedDriveString as unknown as T;
   }
+  
 
   /** Synchronously returns a driveKey from the cache by its driveId */
   public driveKeyForDriveId(driveId: EntityID): EntityKey | false {

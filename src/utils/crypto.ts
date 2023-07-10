@@ -7,6 +7,7 @@ import utf8 from "utf8";
 import jwkToPem, { JWK } from "jwk-to-pem";
 import { authTagLength } from "../constants";
 import { EntityKey } from "../types/arfs";
+import { encodeStringToArrayBuffer } from "./common";
 
 const keyByteLength = 32;
 const algo = "aes-256-gcm"; // crypto library does not accept this in uppercase. So gotta keep using aes-256-gcm
@@ -34,33 +35,56 @@ export async function deriveDriveKey(
   driveId: string,
   walletPrivateKey: string,
 ): Promise<EntityKey> {
-  const driveIdBytes: Buffer = Buffer.from(parse(driveId) as Uint8Array); // The UUID of the driveId is the SALT used for the drive key
-  const driveBuffer: Buffer = Buffer.from(utf8.encode("drive"));
-  const signingKey: Buffer = Buffer.concat([driveBuffer, driveIdBytes]);
+  const driveIdBytes: Uint8Array = new Uint8Array(parse(driveId)); // The UUID of the driveId is the SALT used for the drive key
+  const driveBuffer: Uint8Array = new Uint8Array(encodeStringToArrayBuffer(utf8.encode("drive")));
+  const signingKey: Uint8Array = concatenateUint8Arrays(driveBuffer, driveIdBytes);
   const walletSignature: Uint8Array = await getArweaveWalletSigningKey(
     JSON.parse(walletPrivateKey),
     signingKey,
   );
-  const info: string = utf8.encode(dataEncryptionKey as string);
-  const driveKey: Buffer = hkdf(Buffer.from(walletSignature), keyByteLength, {
+  const info: string = uint8ArrayToString(new Uint8Array(encodeStringToArrayBuffer(utf8.encode(dataEncryptionKey as string))));
+  const driveKey: Uint8Array = await hkdf(uint8ArrayToString(walletSignature), keyByteLength, {
     info,
     hash: keyHash,
   });
   return new EntityKey(driveKey);
 }
 
+function concatenateUint8Arrays(...arrays: Uint8Array[]): Uint8Array {
+  const totalLength = arrays.reduce((length, array) => length + array.length, 0);
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const array of arrays) {
+    result.set(array, offset);
+    offset += array.length;
+  }
+  return result;
+}
+
+
 // Derive a key from the user's Drive Key and the File Id
 export async function deriveFileKey(
   fileId: string,
   driveKey: EntityKey,
 ): Promise<EntityKey> {
-  const info: Buffer = Buffer.from(parse(fileId) as Uint8Array);
-  const fileKey: Buffer = hkdf(driveKey.keyData, keyByteLength, {
+  const info = uint8ArrayToString(parse(fileId) as Uint8Array);
+  const keyDataString = uint8ArrayToString(driveKey.keyData);
+  const fileKey = await hkdf(keyDataString, keyByteLength, {
     info,
     hash: keyHash,
   });
-  return new EntityKey(fileKey);
+  return new EntityKey(new Uint8Array(fileKey));
 }
+
+export function uint8ArrayToString(uint8Array: Uint8Array): string {
+  let binary = '';
+  const length = uint8Array.length;
+  for (let i = 0; i < length; i++) {
+    binary += String.fromCharCode(uint8Array[i]);
+  }
+  return binary;
+}
+
 
 // New ArFS Drive decryption function, using ArDrive KDF and AES-256-GCM
 export async function driveEncrypt(
@@ -114,9 +138,9 @@ export async function getFileAndEncrypt(
 ): Promise<ArFSEncryptedData> {
   const response = await fetch(filePath);
   const data = await response.arrayBuffer();
-  const buffer = Buffer.from(data);
+  const buffer = new Uint8Array(data);
 
-  const iv: Buffer = crypto.randomBytes(12);
+  const iv: Uint8Array = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv(algo, fileKey.keyData, iv, {
     authTagLength,
   });
@@ -127,7 +151,7 @@ export async function getFileAndEncrypt(
   ]);
   const encryptedFile: ArFSEncryptedData = {
     cipher: "AES256-GCM",
-    cipherIV: iv.toString("base64"),
+    cipherIV: uint8ArrayToString(iv),
     data: encryptedBuffer,
   };
   return encryptedFile;
@@ -137,58 +161,101 @@ export async function getFileAndEncrypt(
 export async function driveDecrypt(
   cipherIV: string,
   driveKey: EntityKey,
-  data: Buffer,
-): Promise<Buffer> {
-  const authTag: Buffer = data.slice(
-    data.byteLength - authTagLength,
-    data.byteLength,
-  );
-  const encryptedDataSlice: Buffer = data.slice(
-    0,
-    data.byteLength - authTagLength,
-  );
-  const iv: Buffer = Buffer.from(cipherIV, "base64");
-  const decipher = crypto.createDecipheriv(algo, driveKey.keyData, iv, {
-    authTagLength,
-  });
-  decipher.setAuthTag(authTag);
-  const decryptedDrive: Buffer = Buffer.concat([
-    decipher.update(encryptedDataSlice),
-    decipher.final(),
-  ]);
-  return decryptedDrive;
+  data: Uint8Array,
+): Promise<Uint8Array> {
+  try {
+    const authTagLength = 16; // Assuming authTagLength is known
+    const authTag = data.slice(data.length - authTagLength);
+    const encryptedDataSlice = data.slice(0, data.length - authTagLength);
+    const iv = decodeBase64ToArrayBuffer(cipherIV);
+    const keyData = decodeBase64ToArrayBuffer(uint8ArrayToString(driveKey.keyData));
+    const decipher = crypto.createDecipheriv(algo, keyData, iv, {
+      authTagLength,
+    });
+    decipher.setAuthTag(authTag);
+
+    const blockSize = 16;
+    const decryptedChunks = [];
+    let chunk = decipher.update(encryptedDataSlice);
+    while (chunk.length > 0) {
+      decryptedChunks.push(chunk);
+      chunk = decipher.update(new Uint8Array(blockSize));
+    }
+    const finalChunk = decipher.final();
+    if (finalChunk.length > 0) {
+      decryptedChunks.push(finalChunk);
+    }
+    const decryptedFile = concatUint8Arrays(decryptedChunks);
+
+    return decryptedFile;
+  } catch (err) {
+    // console.log (err);
+    console.log("Error decrypting file data");
+    return new Uint8Array([69, 114, 114, 111, 114]); // Return Uint8Array for "Error"
+  }
 }
+
+export function decodeBase64ToArrayBuffer(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const length = binary.length;
+  const buffer = new Uint8Array(length);
+  for (let i = 0; i < length; i++) {
+    buffer[i] = binary.charCodeAt(i);
+  }
+  return buffer;
+}
+
 
 // New ArFS File decryption function, using ArDrive KDF and AES-256-GCM
 export async function fileDecrypt(
   cipherIV: string,
   fileKey: EntityKey,
-  data: Buffer,
-): Promise<Buffer> {
+  data: Uint8Array,
+): Promise<Uint8Array> {
   try {
-    const authTag: Buffer = data.slice(
-      data.byteLength - authTagLength,
-      data.byteLength,
-    );
-    const encryptedDataSlice: Buffer = data.slice(
-      0,
-      data.byteLength - authTagLength,
-    );
-    const iv: Buffer = Buffer.from(cipherIV, "base64");
-    const decipher = crypto.createDecipheriv(algo, fileKey.keyData, iv, {
+    const authTagLength = 16; // Assuming authTagLength is known
+    const authTag = data.slice(data.length - authTagLength);
+    const encryptedDataSlice = data.slice(0, data.length - authTagLength);
+    const iv = decodeBase64ToArrayBuffer(cipherIV);
+    const keyData = decodeBase64ToArrayBuffer(uint8ArrayToString(fileKey.keyData));
+    const decipher = crypto.createDecipheriv(algo, keyData, iv, {
       authTagLength,
     });
     decipher.setAuthTag(authTag);
-    const decryptedFile: Buffer = Buffer.concat([
-      decipher.update(encryptedDataSlice),
-      decipher.final(),
-    ]);
+
+    const blockSize = 16;
+    const decryptedChunks = [];
+    let chunk = decipher.update(encryptedDataSlice);
+    while (chunk.length > 0) {
+      decryptedChunks.push(chunk);
+      chunk = decipher.update(new Uint8Array(blockSize));
+    }
+    const finalChunk = decipher.final();
+    if (finalChunk.length > 0) {
+      decryptedChunks.push(finalChunk);
+    }
+    const decryptedFile = concatUint8Arrays(decryptedChunks);
+
     return decryptedFile;
   } catch (err) {
     // console.log (err);
     console.log("Error decrypting file data");
-    return Buffer.from("Error", "ascii");
+    return new Uint8Array([69, 114, 114, 111, 114]); // Return Uint8Array for "Error"
   }
+}
+
+export function concatUint8Arrays(arrays: Uint8Array[]): Uint8Array {
+  let totalLength = 0;
+  for (const arr of arrays) {
+    totalLength += arr.length;
+  }
+  const result = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const arr of arrays) {
+    result.set(arr, offset);
+    offset += arr.length;
+  }
+  return result;
 }
 
 // gets hash of a file using SHA512
@@ -241,18 +308,35 @@ export async function decryptText(
   password: string,
 ): Promise<string> {
   try {
-    const iv = Buffer.from(text.iv.toString(), "hex");
-    const encryptedText = Buffer.from(text.encryptedText.toString(), "hex");
+    const iv = hexStringToUint8Array(text.iv.toString());
+    const encryptedText = hexStringToUint8Array(text.encryptedText.toString());
     const cipherKey = getTextCipherKey(password);
     const decipher = crypto.createDecipheriv("aes-256-cbc", cipherKey, iv);
-    let decrypted = decipher.update(encryptedText);
-    decrypted = Buffer.concat([decrypted, decipher.final()]);
-    return decrypted.toString();
+    const decrypted = concatenateUint8Arrays(
+      decipher.update(encryptedText),
+      decipher.final()
+    );
+    const decoder = new TextDecoder();
+    return decoder.decode(decrypted);
   } catch (err) {
     // console.log(err);
     return "ERROR";
   }
 }
+
+function hexStringToUint8Array(hexString: string): Uint8Array {
+  const length = hexString.length / 2;
+  const uint8Array = new Uint8Array(length);
+  for (let i = 0; i < length; i++) {
+    const startIndex = i * 2;
+    const endIndex = startIndex + 2;
+    const byteString = hexString.slice(startIndex, endIndex);
+    const byte = parseInt(byteString, 16);
+    uint8Array[i] = byte;
+  }
+  return uint8Array;
+}
+
 
 // Used to encrypt data stored in SQLite DB
 function getTextCipherKey(password: crypto.BinaryLike): Buffer {

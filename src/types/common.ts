@@ -148,21 +148,24 @@ export class GatewayAPI {
    *
    * @remarks Will use data from `ArFSMetadataCache` if it exists and will cache any fetched data
    * */
-  public async getTxData(txId: ArweaveAddress): Promise<Buffer> {
+  public async getTxData(txId: ArweaveAddress): Promise<Uint8Array> {
     const cachedData = await ArFSMetadataIDBCache.get(txId);
     if (cachedData) {
+      console.log(typeof cachedData, cachedData)
       return cachedData;
     }
-    const { data: txData } = await this.retryRequestUntilMaxRetries<Buffer>(
+    const { data: txData } = await this.retryRequestUntilMaxRetries<Uint8Array>(
       () =>
         this.axiosInstance.get(`${this.gatewayUrl.href}${txId}`, {
           responseType: "arraybuffer",
         }),
     );
+    console.log(typeof txData)
 
     await ArFSMetadataIDBCache.put(txId, txData);
     return txData;
   }
+
 
   /**
    * Retries the given request until the response returns a successful

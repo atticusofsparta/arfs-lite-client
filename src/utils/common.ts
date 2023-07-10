@@ -38,9 +38,21 @@ import {
   FolderHierarchy,
 } from "src/types/arfs";
 
-export function urlEncodeHashKey(keyBuffer: Buffer): string {
-  return keyBuffer.toString("base64").replace("=", "");
+export function urlEncodeHashKey(keyBuffer: Uint8Array): string {
+  const base64 = encodeArrayBufferToBase64(keyBuffer);
+  return base64.replace(/=/g, '');
 }
+
+export function encodeArrayBufferToBase64(buffer: Uint8Array): string {
+  let binary = '';
+  const bytes = new Uint8Array(buffer);
+  const length = bytes.byteLength;
+  for (let i = 0; i < length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 
 export function buildQuery({
   tags = [],
@@ -382,4 +394,9 @@ export function fileConflictInfoMap(
     fileName: entity.name,
     lastModifiedDate: entity.lastModifiedDate,
   };
+}
+
+export function encodeStringToArrayBuffer(str: string): ArrayBuffer {
+  const encoder = new TextEncoder();
+  return encoder.encode(str).buffer;
 }
