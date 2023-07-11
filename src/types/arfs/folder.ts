@@ -25,12 +25,13 @@ import {
   FolderConflictResolution,
   UnixTime,
 } from "./common";
-import { Utf8ArrayToStr } from "src/utils/common";
+import { Utf8ArrayToStr, isJsonSerializable } from "src/utils/common";
 import {
   ArFSFileToUpload,
   ArFSPrivateFile,
   ArFSPrivateFileWithPaths,
 } from "./file";
+import { convertUint8ArrayToString } from "src/utils/crypto";
 
 export class ArFSPublicFolder extends ArFSFileOrFolderEntity<"folder"> {
   constructor(
@@ -456,7 +457,7 @@ export abstract class ArFSFolderBuilder<
     node?: GQLNodeInterface,
   ): Promise<GQLTagInterface[]> {
     const tags = await super.parseFromArweaveNode(node);
-    if (!tags){
+    if (!tags) {
       throw new Error("Tags missing!");
     }
     return tags.filter((tag) => tag.name !== "Folder-Id");
@@ -485,7 +486,7 @@ export class ArFSPublicFolderBuilder extends ArFSFolderBuilder<ArFSPublicFolder>
     gatewayApi: GatewayAPI,
   ): ArFSPublicFolderBuilder {
     const { tags } = node;
-    if (!tags){
+    if (!tags) {
       throw new Error("Tags missing!");
     }
     const folderId = tags.find((tag) => tag.name === "Folder-Id")?.value;
@@ -519,8 +520,9 @@ export class ArFSPublicFolderBuilder extends ArFSFolderBuilder<ArFSPublicFolder>
       this.entityType === "folder"
     ) {
       const txData = await this.getDataForTxID(this.txId);
-      const dataString = await Utf8ArrayToStr(txData);
-      const dataJSON = await JSON.parse(dataString);
+      const dataString = await Utf8ArrayToStr(new Uint8Array(txData));
+      console.log({ dataString, txData });
+      const dataJSON = JSON.parse(dataString);
 
       // Get the folder name
       this.name = dataJSON.name;

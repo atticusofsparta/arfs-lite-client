@@ -273,7 +273,7 @@ export abstract class ArFSFileBuilder<
     node?: GQLNodeInterface,
   ): Promise<GQLTagInterface[]> {
     const tags = await super.parseFromArweaveNode(node);
-    if (!tags){
+    if (!tags) {
       throw new Error("Tags missing!");
     }
     return tags.filter((tag) => tag.name !== "File-Id");
@@ -294,7 +294,7 @@ export class ArFSPublicFileBuilder extends ArFSFileBuilder<ArFSPublicFile> {
     gatewayApi: GatewayAPI,
   ): ArFSPublicFileBuilder {
     const { tags } = node;
-    if (!tags){
+    if (!tags) {
       throw new Error("Tags missing!");
     }
     const fileId = tags.find((tag) => tag.name === "File-Id")?.value;
@@ -322,7 +322,7 @@ export class ArFSPublicFileBuilder extends ArFSFileBuilder<ArFSPublicFile> {
       this.entityId
     ) {
       const txData = await this.getDataForTxID(this.txId);
-      const dataString = await Utf8ArrayToStr(txData);
+      const dataString = await Utf8ArrayToStr(new Uint8Array(txData));
       const dataJSON: FileMetaDataTransactionData = await JSON.parse(
         dataString,
       );
@@ -391,7 +391,7 @@ export class ArFSPrivateFileBuilder extends ArFSFileBuilder<ArFSPrivateFile> {
     driveKey: EntityKey,
   ): ArFSPrivateFileBuilder {
     const { tags } = node;
-    if (!tags){
+    if (!tags) {
       throw new Error("Tags missing!");
     }
     const fileId = tags.find((tag) => tag.name === "File-Id")?.value;
@@ -411,7 +411,7 @@ export class ArFSPrivateFileBuilder extends ArFSFileBuilder<ArFSPrivateFile> {
   ): Promise<GQLTagInterface[]> {
     const unparsedTags: GQLTagInterface[] = [];
     const tags = await super.parseFromArweaveNode(node);
-    if (!tags){
+    if (!tags) {
       throw new Error("Tags missing!");
     }
     tags.forEach((tag: GQLTagInterface) => {
@@ -458,7 +458,7 @@ export class ArFSPrivateFileBuilder extends ArFSFileBuilder<ArFSPrivateFile> {
         dataBuffer,
       );
       const decryptedFileString: string = await Utf8ArrayToStr(
-        decryptedFileBuffer,
+        new Uint8Array(decryptedFileBuffer),
       );
       const decryptedFileJSON: FileMetaDataTransactionData = await JSON.parse(
         decryptedFileString,
@@ -537,7 +537,6 @@ export class ArFSFileToUpload extends ArFSDataToUpload {
     public readonly customContentType?: string,
     public readonly customMetaData?: CustomMetaData,
   ) {
-   
     super();
     this.filePath = filePath;
     this.fileStats = fileStats;
@@ -580,7 +579,6 @@ export class ArFSFileToUpload extends ArFSDataToUpload {
       reader.readAsArrayBuffer(this.fileStats);
     });
   }
-  
 
   public get contentType(): string {
     if (this.customContentType) {

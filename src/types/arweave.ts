@@ -13,7 +13,7 @@ import { BigNumber } from "bignumber.js";
 
 export class ArweaveAddress implements Equatable<ArweaveAddress> {
   constructor(private readonly address: string) {
-    if (!(new RegExp("^[a-zA-Z0-9_-]{43}$")).test(address)) {
+    if (!new RegExp("^[a-zA-Z0-9_-]{43}$").test(address)) {
       throw new Error(
         "Arweave addresses must be 43 characters in length with characters in the following set: [a-zA-Z0-9_-]",
       );
@@ -180,12 +180,9 @@ export class PrivateKeyData {
       driveKey,
       encryptedDataBuffer,
     );
-    const decryptedDriveString = await Utf8ArrayToStr(
-      decryptedDriveBuffer,
-    );
+    const decryptedDriveString = await Utf8ArrayToStr(decryptedDriveBuffer);
     return decryptedDriveString as unknown as T;
   }
-  
 
   /** Synchronously returns a driveKey from the cache by its driveId */
   public driveKeyForDriveId(driveId: EntityID): EntityKey | false {

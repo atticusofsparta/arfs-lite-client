@@ -51,7 +51,6 @@ export class ArFSEntityIDBCache<K, V> {
     });
   }
 
-  
   cacheKeyString(key: K): string {
     // Note: This implementation may not sufficiently differentiate keys
     // for certain object types depending on their toJSON implementation
@@ -62,13 +61,12 @@ export class ArFSEntityIDBCache<K, V> {
     const dbName = "arfs-entity-cache-db";
     const version = 1;
 
-    
     return new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open(dbName, version);
 
-      console.log("initializing database")
+      console.log("initializing database");
       request.onerror = (event) => {
-        console.debug(event)
+        console.debug(event);
         reject(request.error);
       };
 
@@ -80,7 +78,7 @@ export class ArFSEntityIDBCache<K, V> {
       };
 
       request.onsuccess = (event) => {
-        console.debug(event)
+        console.debug(event);
         resolve(request.result);
       };
     });
@@ -89,35 +87,30 @@ export class ArFSEntityIDBCache<K, V> {
   async put(key: K, value: V): Promise<V> {
     const cacheKey = this.cacheKeyString(key);
     const db = await this.dbPromise;
-  
+
     return new Promise<V>((resolve, reject) => {
       const transaction = db.transaction("cache", "readwrite");
       const objectStore = transaction.objectStore("cache");
-  
-      const request = objectStore.put({ key: cacheKey.toString(), value: value });
-  
+
+      const request = objectStore.put({
+        key: cacheKey.toString(),
+        value: value,
+      });
+
       request.onsuccess = (event) => {
         resolve(value);
       };
-  
+
       request.onerror = (event) => {
         console.debug("Error putting in entity cache");
         reject(request.error);
       };
     });
   }
-  
 
   async get(key: K): Promise<V | undefined> {
     const cacheKey = this.cacheKeyString(key);
     const db = await this.dbPromise;
-
-    console.log("getting", cacheKey);
-    console.log({
-      cache: this.cache,
-      cacheKey,
-
-    })
 
     return new Promise<V | undefined>((resolve, reject) => {
       const transaction = db.transaction("cache", "readonly");
@@ -160,7 +153,7 @@ export class ArFSEntityIDBCache<K, V> {
             resolve();
           };
           deleteRequest.onerror = () => {
-            console.debug(event)
+            console.debug(event);
             reject(deleteRequest.error);
           };
         } else {
@@ -169,7 +162,7 @@ export class ArFSEntityIDBCache<K, V> {
       };
 
       request.onerror = (event) => {
-        console.debug(event)
+        console.debug(event);
         reject(request.error);
       };
     });
@@ -185,12 +178,12 @@ export class ArFSEntityIDBCache<K, V> {
       const request = objectStore.clear();
 
       request.onsuccess = (event) => {
-        console.debug(event)
+        console.debug(event);
         resolve();
       };
 
       request.onerror = (event) => {
-        console.debug(event)
+        console.debug(event);
         reject(request.error);
       };
     });
@@ -206,12 +199,12 @@ export class ArFSEntityIDBCache<K, V> {
       const request = objectStore.count();
 
       request.onsuccess = (event) => {
-        console.debug(event)
+        console.debug(event);
         resolve(request.result);
       };
 
       request.onerror = (event) => {
-        console.debug(event)
+        console.debug(event);
         reject(request.error);
       };
     });
@@ -240,9 +233,8 @@ export class ArFSMetadataIDBCache {
       console.log("Initializing database");
 
       request.onerror = (event) => {
-         console.debug(event)
+        console.debug(event);
         reject(request.error);
-       
       };
 
       request.onupgradeneeded = (event) => {
@@ -253,7 +245,7 @@ export class ArFSMetadataIDBCache {
       };
 
       request.onsuccess = (event) => {
-        console.debug(event)
+        console.debug(event);
         resolve(request.result);
       };
     });
@@ -274,25 +266,22 @@ export class ArFSMetadataIDBCache {
   static async put(txId: ArweaveAddress, buffer: Uint8Array): Promise<void> {
     const db = await this.getDatabase();
 
-    console.log("putting", txId);
-    console.log({
-      cache: this.metadataCacheFolder,
-
-    })
-
     return new Promise<void>((resolve, reject) => {
       const transaction = db.transaction("cache", "readwrite");
       const objectStore = transaction.objectStore("cache");
 
-      const request = objectStore.put({ txId: txId.toString(), buffer: buffer });
+      const request = objectStore.put({
+        txId: txId.toString(),
+        buffer: buffer,
+      });
 
       request.onsuccess = (event) => {
-        console.debug(event)
+        console.debug(event);
         resolve();
       };
 
       request.onerror = (event) => {
-        console.debug(event)
+        console.debug(event);
         reject(request.error);
       };
     });
@@ -302,11 +291,6 @@ export class ArFSMetadataIDBCache {
     const db = await this.getDatabase();
 
     return new Promise<Uint8Array | undefined>((resolve, reject) => {
-      console.log("getting", txId);
-      console.log({
-        cache: this.metadataCacheFolder,
-  
-      })
       const transaction = db.transaction("cache", "readonly");
       const objectStore = transaction.objectStore("cache");
       const index = objectStore.index("txId");
@@ -316,7 +300,7 @@ export class ArFSMetadataIDBCache {
       request.onsuccess = (event) => {
         const result = request.result;
         if (result) {
-          console.debug(event, result)
+          console.debug(event, result);
           resolve(result.buffer);
         } else {
           resolve(undefined);
@@ -324,7 +308,7 @@ export class ArFSMetadataIDBCache {
       };
 
       request.onerror = (event) => {
-        console.debug(event)
+        console.debug(event);
         reject(request.error);
       };
     });

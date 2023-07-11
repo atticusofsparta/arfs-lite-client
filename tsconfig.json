@@ -12,7 +12,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "Node"
-    
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "test", "lib", "**/*spec.ts"]

@@ -98,7 +98,12 @@ const entityIdRegex = /^[a-f\d]{8}-([a-f\d]{4}-){3}[a-f\d]{12}$/i;
 
 export class EntityID implements Equatable<EntityID> {
   constructor(protected entityId: string) {
-    if (entityId && entityId.length && !entityIdRegex.test(entityId.toString()) && entityId !== "ENCRYPTED") {
+    if (
+      entityId &&
+      entityId.length &&
+      !entityIdRegex.test(entityId.toString()) &&
+      entityId !== "ENCRYPTED"
+    ) {
       throw new Error(`Invalid entity ID '${entityId}'!'`);
     }
   }
@@ -176,7 +181,6 @@ export class EntityKey {
       );
     }
   }
-
 
   toString(): string {
     return urlEncodeHashKey(this.keyData);
@@ -361,7 +365,7 @@ export abstract class ArFSMetadataEntityBuilder<T extends ArFSEntity> {
     }
     this.txId = ADDR(node.id);
     const { tags } = node;
-    if (!tags){
+    if (!tags) {
       throw new Error("Tags missing!");
     }
     tags.forEach((tag: GQLTagInterface) => {
@@ -400,7 +404,7 @@ export abstract class ArFSMetadataEntityBuilder<T extends ArFSEntity> {
 
   public async build(node?: GQLNodeInterface): Promise<T> {
     const extraTags = await this.parseFromArweaveNode(node, this.owner);
-    if (!extraTags){
+    if (!extraTags) {
       throw new Error("Tags missing!");
     }
     this.parseCustomMetaDataFromGqlTags(extraTags);
@@ -473,7 +477,7 @@ export abstract class ArFSFileOrFolderBuilder<
   ): Promise<GQLTagInterface[]> {
     const unparsedTags: GQLTagInterface[] = [];
     const tags = await super.parseFromArweaveNode(node);
-    if (!tags){
+    if (!tags) {
       throw new Error("Tags missing!");
     }
     tags.forEach((tag: GQLTagInterface) => {
@@ -1157,12 +1161,11 @@ export class ArFSManifestToUpload extends ArFSDataToUpload {
     const data = JSON.stringify(this.manifest);
     return new Uint8Array(encodeStringToArrayBuffer(data));
   }
-  
+
   public get size(): ByteCount {
     const data = JSON.stringify(this.manifest);
     return new ByteCount(encodeStringToArrayBuffer(data).byteLength);
   }
-
 
   public get lastModifiedDate(): UnixTime {
     return this.lastModifiedDateMS;

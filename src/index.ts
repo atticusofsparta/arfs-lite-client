@@ -62,11 +62,11 @@ interface ArFSClientType {
     address,
     privateKeyData,
     latestRevisionsOnly = true,
-  }:{
-    address: string,
-    privateKeyData: PrivateKeyData,
-    latestRevisionsOnly?: boolean,
-  } ): Promise<ArFSDriveEntity[]>;
+  }: {
+    address: string;
+    privateKeyData: PrivateKeyData;
+    latestRevisionsOnly?: boolean;
+  }): Promise<ArFSDriveEntity[]>;
   listPublicFolder({
     folderId,
     maxDepth,
@@ -75,31 +75,45 @@ interface ArFSClientType {
   }: ListPublicFolderParams): Promise<
     (ArFSPublicFolderWithPaths | ArFSPublicFileWithPaths)[]
   >;
+  getAllFoldersOfPublicDrive({
+    driveId,
+    owner,
+    latestRevisionsOnly = false,
+  }: ArFSAllPublicFoldersOfDriveParams): Promise<ArFSPublicFolder[]>;
+  getPublicFilesWithParentFolderIds({
+    folderIDs,
+    owner,
+    latestRevisionsOnly = false,
+  }: {
+    folderIDs: EntityID[];
+    owner: ArweaveAddress;
+    latestRevisionsOnly?: boolean;
+  }): Promise<ArFSPublicFile[]>;
 
   // private functions
-//   getPrivateDrive({
-//     driveId,
-//     owner,
-//   }: GetPublicDriveParams): Promise<ArFSPublicDrive>;
-//   getPrivateFolder({
-//     folderId,
-//     owner,
-//   }: GetPublicFolderParams): Promise<ArFSPublicFolder>;
-//   getPrivateFile({
-//     fileId,
-//     owner,
-//   }: GetPublicFileParams): Promise<ArFSPublicFile>;
-//   getAllPrivateDrivesForAddress(
-//     address: ArweaveAddress,
-//   ): Promise<ArFSDriveEntity[]>;
-//   listPrivateFolder({
-//     folderId,
-//     maxDepth,
-//     includeRoot,
-//     owner,
-//   }: ListPublicFolderParams): Promise<
-//     (ArFSPublicFolderWithPaths | ArFSPublicFileWithPaths)[]
-//   >;
+  //   getPrivateDrive({
+  //     driveId,
+  //     owner,
+  //   }: GetPublicDriveParams): Promise<ArFSPublicDrive>;
+  //   getPrivateFolder({
+  //     folderId,
+  //     owner,
+  //   }: GetPublicFolderParams): Promise<ArFSPublicFolder>;
+  //   getPrivateFile({
+  //     fileId,
+  //     owner,
+  //   }: GetPublicFileParams): Promise<ArFSPublicFile>;
+  //   getAllPrivateDrivesForAddress(
+  //     address: ArweaveAddress,
+  //   ): Promise<ArFSDriveEntity[]>;
+  //   listPrivateFolder({
+  //     folderId,
+  //     maxDepth,
+  //     includeRoot,
+  //     owner,
+  //   }: ListPublicFolderParams): Promise<
+  //     (ArFSPublicFolderWithPaths | ArFSPublicFileWithPaths)[]
+  //   >;
 }
 
 class ArFSClient implements ArFSClientType {
@@ -107,8 +121,7 @@ class ArFSClient implements ArFSClientType {
   _gatewayApi: GatewayAPI;
   _caches: typeof defaultArFSClientCache;
   appName: string;
-    appVersion: string;
-
+  appVersion: string;
 
   constructor(
     arweave: Arweave,
@@ -130,7 +143,7 @@ class ArFSClient implements ArFSClientType {
       return cachedOwner;
     }
 
-    const newDriveId = (async () => {
+    const newDriveId = async () => {
       const gqlQuery = buildQuery({
         tags: [
           { name: "Drive-Id", value: `${driveId}` },
@@ -151,12 +164,9 @@ class ArFSClient implements ArFSClientType {
       const driveOwnerAddress = edgeOfFirstDrive.node.owner.address;
       const driveOwner = ADDR(driveOwnerAddress);
       return driveOwner;
-    })
+    };
 
-    return this.caches.ownerCache.put(
-      driveId,
-      await newDriveId(),
-    );
+    return this.caches.ownerCache.put(driveId, await newDriveId());
   }
 
   async getDriveIDForEntityId(
@@ -168,7 +178,7 @@ class ArFSClient implements ArFSClientType {
       return cachedDriveID;
     }
 
-   const newEntityId = await (async () => {
+    const newEntityId = await (async () => {
       const gqlQuery = buildQuery({
         tags: [{ name: gqlTypeTag, value: `${entityId}` }],
       });
@@ -180,22 +190,17 @@ class ArFSClient implements ArFSClientType {
         throw new Error(`Entity with ${gqlTypeTag} ${entityId} not found!`);
       }
 
-      const driveIdTag = edges[0].node.tags.find(
-        (t) => t.name === "Drive-Id",
-      );
+      const driveIdTag = edges[0].node.tags.find((t) => t.name === "Drive-Id");
       if (driveIdTag) {
         return EID(driveIdTag.value);
       }
-  
+
       throw new Error(
         `No Drive-Id tag found for meta data transaction of ${gqlTypeTag}: ${entityId}`,
       );
-    })
+    });
 
-    return await this.caches.driveIdCache.put(
-      entityId,
-      await newEntityId(),
-    );
+    return await this.caches.driveIdCache.put(entityId, await newEntityId());
   }
 
   async getDriveOwnerForFolderId(folderId: EntityID): Promise<ArweaveAddress> {
@@ -290,10 +295,10 @@ class ArFSClient implements ArFSClientType {
     address,
     privateKeyData,
     latestRevisionsOnly = true,
-  }:{
-    address: string,
-    privateKeyData: PrivateKeyData,
-    latestRevisionsOnly?: boolean,
+  }: {
+    address: string;
+    privateKeyData: PrivateKeyData;
+    latestRevisionsOnly?: boolean;
   }): Promise<ArFSDriveEntity[]> {
     const owner = new ArweaveAddress(address);
     let cursor = "";
@@ -304,7 +309,7 @@ class ArFSClient implements ArFSClientType {
       const gqlQuery = buildQuery({
         tags: [{ name: "Entity-Type", value: "drive" }],
         cursor,
-        owner
+        owner,
       });
 
       const transactions = await this.gatewayApi.gqlRequest(gqlQuery);
@@ -343,11 +348,15 @@ class ArFSClient implements ArFSClientType {
       : allDrives;
   }
 
-  async getPublicFilesWithParentFolderIds(
-    folderIDs: EntityID[],
-    owner: ArweaveAddress,
+  async getPublicFilesWithParentFolderIds({
+    folderIDs,
+    owner,
     latestRevisionsOnly = false,
-  ): Promise<ArFSPublicFile[]> {
+  }: {
+    folderIDs: EntityID[];
+    owner: ArweaveAddress;
+    latestRevisionsOnly?: boolean;
+  }): Promise<ArFSPublicFile[]> {
     let cursor = "";
     let hasNextPage = true;
     const allFiles: ArFSPublicFile[] = [];
@@ -488,11 +497,15 @@ class ArFSClient implements ArFSClientType {
     const childrenFileEntities: ArFSPublicFile[] = [];
 
     for (const id of searchFolderIDs) {
-      (await this.getPublicFilesWithParentFolderIds([id], owner, true)).forEach(
-        (e) => {
-          childrenFileEntities.push(e);
-        },
-      );
+      (
+        await this.getPublicFilesWithParentFolderIds({
+          folderIDs: [id],
+          owner,
+          latestRevisionsOnly: true,
+        })
+      ).forEach((e) => {
+        childrenFileEntities.push(e);
+      });
     }
 
     const children: (ArFSPublicFolder | ArFSPublicFile)[] = [];
@@ -510,10 +523,4 @@ class ArFSClient implements ArFSClientType {
   }
 }
 
-
-export {
-  ArFSClient,
-  ArFSClientType,
-  ArweaveAddress,
-  PrivateKeyData
-}
+export { ArFSClient, ArFSClientType, ArweaveAddress, PrivateKeyData };

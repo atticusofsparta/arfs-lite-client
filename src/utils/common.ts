@@ -40,11 +40,11 @@ import {
 
 export function urlEncodeHashKey(keyBuffer: Uint8Array): string {
   const base64 = encodeArrayBufferToBase64(keyBuffer);
-  return base64.replace(/=/g, '');
+  return base64.replace(/=/g, "");
 }
 
 export function encodeArrayBufferToBase64(buffer: Uint8Array): string {
-  let binary = '';
+  let binary = "";
   const bytes = new Uint8Array(buffer);
   const length = bytes.byteLength;
   for (let i = 0; i < length; i++) {
@@ -52,7 +52,6 @@ export function encodeArrayBufferToBase64(buffer: Uint8Array): string {
   }
   return btoa(binary);
 }
-
 
 export function buildQuery({
   tags = [],

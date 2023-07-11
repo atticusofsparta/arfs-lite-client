@@ -138,5 +138,7 @@ export const pageLimit = 100;
 
 export type Sort = typeof ASCENDING_ORDER | typeof DESCENDING_ORDER;
 
-export const gqlTagNameArray = gqlTagNameRecord ? Object.values(gqlTagNameRecord) : [];
+export const gqlTagNameArray = gqlTagNameRecord
+  ? Object.values(gqlTagNameRecord)
+  : [];
 export type GqlTagName = (typeof gqlTagNameArray)[number];

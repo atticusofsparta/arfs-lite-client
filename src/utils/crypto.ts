@@ -36,22 +36,38 @@ export async function deriveDriveKey(
   walletPrivateKey: string,
 ): Promise<EntityKey> {
   const driveIdBytes: Uint8Array = new Uint8Array(parse(driveId)); // The UUID of the driveId is the SALT used for the drive key
-  const driveBuffer: Uint8Array = new Uint8Array(encodeStringToArrayBuffer(utf8.encode("drive")));
-  const signingKey: Uint8Array = concatenateUint8Arrays(driveBuffer, driveIdBytes);
+  const driveBuffer: Uint8Array = new Uint8Array(
+    encodeStringToArrayBuffer(utf8.encode("drive")),
+  );
+  const signingKey: Uint8Array = concatenateUint8Arrays(
+    driveBuffer,
+    driveIdBytes,
+  );
   const walletSignature: Uint8Array = await getArweaveWalletSigningKey(
     JSON.parse(walletPrivateKey),
     signingKey,
   );
-  const info: string = uint8ArrayToString(new Uint8Array(encodeStringToArrayBuffer(utf8.encode(dataEncryptionKey as string))));
-  const driveKey: Uint8Array = await hkdf(uint8ArrayToString(walletSignature), keyByteLength, {
-    info,
-    hash: keyHash,
-  });
+  const info: string = uint8ArrayToString(
+    new Uint8Array(
+      encodeStringToArrayBuffer(utf8.encode(dataEncryptionKey as string)),
+    ),
+  );
+  const driveKey: Uint8Array = await hkdf(
+    uint8ArrayToString(walletSignature),
+    keyByteLength,
+    {
+      info,
+      hash: keyHash,
+    },
+  );
   return new EntityKey(driveKey);
 }
 
 function concatenateUint8Arrays(...arrays: Uint8Array[]): Uint8Array {
-  const totalLength = arrays.reduce((length, array) => length + array.length, 0);
+  const totalLength = arrays.reduce(
+    (length, array) => length + array.length,
+    0,
+  );
   const result = new Uint8Array(totalLength);
   let offset = 0;
   for (const array of arrays) {
@@ -60,7 +76,6 @@ function concatenateUint8Arrays(...arrays: Uint8Array[]): Uint8Array {
   }
   return result;
 }
-
 
 // Derive a key from the user's Drive Key and the File Id
 export async function deriveFileKey(
@@ -77,7 +92,7 @@ export async function deriveFileKey(
 }
 
 export function uint8ArrayToString(uint8Array: Uint8Array): string {
-  let binary = '';
+  let binary = "";
   const length = uint8Array.length;
   for (let i = 0; i < length; i++) {
     binary += String.fromCharCode(uint8Array[i]);
@@ -85,6 +100,12 @@ export function uint8ArrayToString(uint8Array: Uint8Array): string {
   return binary;
 }
 
+export function convertUint8ArrayToString(uint8Array: Uint8Array) {
+  const byteArray = Array.from(uint8Array);
+  const decoder = new TextDecoder();
+  const jsonString = decoder.decode(new Uint8Array(byteArray));
+  return jsonString;
+}
 
 // New ArFS Drive decryption function, using ArDrive KDF and AES-256-GCM
 export async function driveEncrypt(
@@ -168,7 +189,9 @@ export async function driveDecrypt(
     const authTag = data.slice(data.length - authTagLength);
     const encryptedDataSlice = data.slice(0, data.length - authTagLength);
     const iv = decodeBase64ToArrayBuffer(cipherIV);
-    const keyData = decodeBase64ToArrayBuffer(uint8ArrayToString(driveKey.keyData));
+    const keyData = decodeBase64ToArrayBuffer(
+      uint8ArrayToString(driveKey.keyData),
+    );
     const decipher = crypto.createDecipheriv(algo, keyData, iv, {
       authTagLength,
     });
@@ -205,7 +228,6 @@ export function decodeBase64ToArrayBuffer(base64: string): Uint8Array {
   return buffer;
 }
 
-
 // New ArFS File decryption function, using ArDrive KDF and AES-256-GCM
 export async function fileDecrypt(
   cipherIV: string,
@@ -217,7 +239,9 @@ export async function fileDecrypt(
     const authTag = data.slice(data.length - authTagLength);
     const encryptedDataSlice = data.slice(0, data.length - authTagLength);
     const iv = decodeBase64ToArrayBuffer(cipherIV);
-    const keyData = decodeBase64ToArrayBuffer(uint8ArrayToString(fileKey.keyData));
+    const keyData = decodeBase64ToArrayBuffer(
+      uint8ArrayToString(fileKey.keyData),
+    );
     const decipher = crypto.createDecipheriv(algo, keyData, iv, {
       authTagLength,
     });
@@ -314,7 +338,7 @@ export async function decryptText(
     const decipher = crypto.createDecipheriv("aes-256-cbc", cipherKey, iv);
     const decrypted = concatenateUint8Arrays(
       decipher.update(encryptedText),
-      decipher.final()
+      decipher.final(),
     );
     const decoder = new TextDecoder();
     return decoder.decode(decrypted);
@@ -336,7 +360,6 @@ function hexStringToUint8Array(hexString: string): Uint8Array {
   }
   return uint8Array;
 }
-
 
 // Used to encrypt data stored in SQLite DB
 function getTextCipherKey(password: crypto.BinaryLike): Buffer {
