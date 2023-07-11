@@ -521,7 +521,6 @@ export class ArFSPublicFolderBuilder extends ArFSFolderBuilder<ArFSPublicFolder>
     ) {
       const txData = await this.getDataForTxID(this.txId);
       const dataString = await Utf8ArrayToStr(new Uint8Array(txData));
-      console.log({ dataString, txData });
       const dataJSON = JSON.parse(dataString);
 
       // Get the folder name

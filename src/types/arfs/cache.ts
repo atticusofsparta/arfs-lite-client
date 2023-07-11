@@ -64,7 +64,6 @@ export class ArFSEntityIDBCache<K, V> {
     return new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open(dbName, version);
 
-      console.log("initializing database");
       request.onerror = (event) => {
         console.debug(event);
         reject(request.error);
@@ -229,8 +228,6 @@ export class ArFSMetadataIDBCache {
 
     return new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open(dbName, version);
-
-      console.log("Initializing database");
 
       request.onerror = (event) => {
         console.debug(event);

@@ -212,8 +212,7 @@ export async function driveDecrypt(
 
     return decryptedFile;
   } catch (err) {
-    // console.log (err);
-    console.log("Error decrypting file data");
+    console.error("Error decrypting file data");
     return new Uint8Array([69, 114, 114, 111, 114]); // Return Uint8Array for "Error"
   }
 }
@@ -262,8 +261,7 @@ export async function fileDecrypt(
 
     return decryptedFile;
   } catch (err) {
-    // console.log (err);
-    console.log("Error decrypting file data");
+    console.error("Error decrypting file data");
     return new Uint8Array([69, 114, 114, 111, 114]); // Return Uint8Array for "Error"
   }
 }
@@ -315,7 +313,7 @@ export async function encryptText(
       encryptedText: encryptedText.toString("hex"),
     };
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return {
       iv: "Error",
       encryptedText: "Error",
@@ -343,7 +341,7 @@ export async function decryptText(
     const decoder = new TextDecoder();
     return decoder.decode(decrypted);
   } catch (err) {
-    // console.log(err);
+    console.error(err)
     return "ERROR";
   }
 }

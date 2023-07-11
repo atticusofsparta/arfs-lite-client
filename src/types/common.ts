@@ -151,7 +151,6 @@ export class GatewayAPI {
   public async getTxData(txId: ArweaveAddress): Promise<Uint8Array> {
     const cachedData = await ArFSMetadataIDBCache.get(txId);
     if (cachedData) {
-      console.log(typeof cachedData, cachedData);
       return cachedData;
     }
     const { data: txData } = await this.retryRequestUntilMaxRetries<Uint8Array>(
@@ -160,7 +159,6 @@ export class GatewayAPI {
           responseType: "arraybuffer",
         }),
     );
-    console.log(typeof txData);
 
     await ArFSMetadataIDBCache.put(txId, txData);
     return txData;

@@ -194,7 +194,6 @@ export class ArFSPublicDriveBuilder extends ArFSDriveBuilder<ArFSPublicDrive> {
       const txData = await this.getDataForTxID(this.txId);
       const dataString = await Utf8ArrayToStr(new Uint8Array(txData));
       const dataJSON = await JSON.parse(dataString);
-      console.log({ txData, dataString, dataJSON });
 
       // Get the drive name and root folder id
       this.name = dataJSON.name;
