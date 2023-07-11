@@ -86,33 +86,27 @@ export class ArFSEntityIDBCache<K, V> {
     });
   }
 
-  async put(key: K, value: Promise<V>): Promise<V> {
+  async put(key: K, value: V): Promise<V> {
     const cacheKey = this.cacheKeyString(key);
     const db = await this.dbPromise;
-
-    console.log("putting", cacheKey);
-    console.log({
-      cache: this.cache,
-      cacheKey,
-
-    })
-
+  
     return new Promise<V>((resolve, reject) => {
-      
       const transaction = db.transaction("cache", "readwrite");
       const objectStore = transaction.objectStore("cache");
-
+  
       const request = objectStore.put({ key: cacheKey.toString(), value: value });
-
+  
       request.onsuccess = (event) => {
         resolve(value);
       };
-
+  
       request.onerror = (event) => {
+        console.debug("Error putting in entity cache");
         reject(request.error);
       };
     });
   }
+  
 
   async get(key: K): Promise<V | undefined> {
     const cacheKey = this.cacheKeyString(key);

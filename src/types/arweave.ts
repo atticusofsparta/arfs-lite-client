@@ -13,7 +13,7 @@ import { BigNumber } from "bignumber.js";
 
 export class ArweaveAddress implements Equatable<ArweaveAddress> {
   constructor(private readonly address: string) {
-    if (!address.match(new RegExp("^[a-zA-Z0-9_-]{43}$"))) {
+    if (!(new RegExp("^[a-zA-Z0-9_-]{43}$")).test(address)) {
       throw new Error(
         "Arweave addresses must be 43 characters in length with characters in the following set: [a-zA-Z0-9_-]",
       );

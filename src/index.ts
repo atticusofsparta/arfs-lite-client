@@ -130,30 +130,32 @@ class ArFSClient implements ArFSClientType {
       return cachedOwner;
     }
 
+    const newDriveId = (async () => {
+      const gqlQuery = buildQuery({
+        tags: [
+          { name: "Drive-Id", value: `${driveId}` },
+          { name: "Entity-Type", value: "drive" },
+        ],
+        sort: ASCENDING_ORDER,
+      });
+      const transactions = await this.gatewayApi.gqlRequest(gqlQuery);
+      const edges: GQLEdgeInterface[] = transactions.edges;
+
+      if (!edges.length) {
+        throw new Error(
+          `Could not find a transaction with "Drive-Id": ${driveId}`,
+        );
+      }
+
+      const edgeOfFirstDrive = edges[0];
+      const driveOwnerAddress = edgeOfFirstDrive.node.owner.address;
+      const driveOwner = ADDR(driveOwnerAddress);
+      return driveOwner;
+    })
+
     return this.caches.ownerCache.put(
       driveId,
-      (async () => {
-        const gqlQuery = buildQuery({
-          tags: [
-            { name: "Drive-Id", value: `${driveId}` },
-            { name: "Entity-Type", value: "drive" },
-          ],
-          sort: ASCENDING_ORDER,
-        });
-        const transactions = await this.gatewayApi.gqlRequest(gqlQuery);
-        const edges: GQLEdgeInterface[] = transactions.edges;
-
-        if (!edges.length) {
-          throw new Error(
-            `Could not find a transaction with "Drive-Id": ${driveId}`,
-          );
-        }
-
-        const edgeOfFirstDrive = edges[0];
-        const driveOwnerAddress = edgeOfFirstDrive.node.owner.address;
-        const driveOwner = ADDR(driveOwnerAddress);
-        return driveOwner;
-      })(),
+      await newDriveId(),
     );
   }
 
@@ -166,31 +168,33 @@ class ArFSClient implements ArFSClientType {
       return cachedDriveID;
     }
 
-    return this.caches.driveIdCache.put(
+   const newEntityId = await (async () => {
+      const gqlQuery = buildQuery({
+        tags: [{ name: gqlTypeTag, value: `${entityId}` }],
+      });
+
+      const transactions = await this.gatewayApi.gqlRequest(gqlQuery);
+      const edges: GQLEdgeInterface[] = transactions.edges;
+
+      if (!edges.length) {
+        throw new Error(`Entity with ${gqlTypeTag} ${entityId} not found!`);
+      }
+
+      const driveIdTag = edges[0].node.tags.find(
+        (t) => t.name === "Drive-Id",
+      );
+      if (driveIdTag) {
+        return EID(driveIdTag.value);
+      }
+  
+      throw new Error(
+        `No Drive-Id tag found for meta data transaction of ${gqlTypeTag}: ${entityId}`,
+      );
+    })
+
+    return await this.caches.driveIdCache.put(
       entityId,
-      (async () => {
-        const gqlQuery = buildQuery({
-          tags: [{ name: gqlTypeTag, value: `${entityId}` }],
-        });
-
-        const transactions = await this.gatewayApi.gqlRequest(gqlQuery);
-        const edges: GQLEdgeInterface[] = transactions.edges;
-
-        if (!edges.length) {
-          throw new Error(`Entity with ${gqlTypeTag} ${entityId} not found!`);
-        }
-
-        const driveIdTag = edges[0].node.tags.find(
-          (t) => t.name === "Drive-Id",
-        );
-        if (driveIdTag) {
-          return EID(driveIdTag.value);
-        }
-
-        throw new Error(
-          `No Drive-Id tag found for meta data transaction of ${gqlTypeTag}: ${entityId}`,
-        );
-      })(),
+      await newEntityId(),
     );
   }
 
@@ -229,7 +233,7 @@ class ArFSClient implements ArFSClientType {
     }
     return await this.caches.publicDriveCache.put(
       cacheKey,
-      new ArFSPublicDriveBuilder({
+      await new ArFSPublicDriveBuilder({
         entityId: driveId,
         gatewayApi: this.gatewayApi,
         owner,
@@ -252,7 +256,7 @@ class ArFSClient implements ArFSClientType {
     }
     return await this.caches.publicFolderCache.put(
       cacheKey,
-      new ArFSPublicFolderBuilder({
+      await new ArFSPublicFolderBuilder({
         entityId: folderId,
         gatewayApi: this.gatewayApi,
         owner,
@@ -274,7 +278,7 @@ class ArFSClient implements ArFSClientType {
     }
     return await this.caches.publicFileCache.put(
       cacheKey,
-      new ArFSPublicFileBuilder({
+      await new ArFSPublicFileBuilder({
         entityId: fileId,
         gatewayApi: this.gatewayApi,
         owner,
@@ -320,9 +324,9 @@ class ArFSClient implements ArFSClientType {
           const drive = await driveBuilder.build(node);
           if (drive.drivePrivacy === "public") {
             const cacheKey = { driveId: drive.driveId, owner };
-            return this.caches.publicDriveCache.put(
+            return await this.caches.publicDriveCache.put(
               cacheKey,
-              Promise.resolve(drive as ArFSPublicDrive),
+              await Promise.resolve(drive as ArFSPublicDrive),
             );
           } else {
             // TODO: No access to private drive cache from here
@@ -375,9 +379,9 @@ class ArFSClient implements ArFSClientType {
           const file = await fileBuilder.build(node);
           const cacheKey = { fileId: file.fileId, owner };
           allFiles.push(file);
-          return this.caches.publicFileCache.put(
+          return await this.caches.publicFileCache.put(
             cacheKey,
-            Promise.resolve(file),
+            await Promise.resolve(file),
           );
         },
       );
@@ -421,9 +425,9 @@ class ArFSClient implements ArFSClientType {
           );
           const folder = await folderBuilder.build(node);
           const cacheKey = { folderId: folder.entityId, owner };
-          return this.caches.publicFolderCache.put(
+          return await this.caches.publicFolderCache.put(
             cacheKey,
-            Promise.resolve(folder),
+            await Promise.resolve(folder),
           );
         },
       );

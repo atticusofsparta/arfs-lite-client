@@ -98,7 +98,7 @@ const entityIdRegex = /^[a-f\d]{8}-([a-f\d]{4}-){3}[a-f\d]{12}$/i;
 
 export class EntityID implements Equatable<EntityID> {
   constructor(protected entityId: string) {
-    if (entityId.length && !entityIdRegex.test(entityId.toString()) && entityId !== "ENCRYPTED") {
+    if (entityId && entityId.length && !entityIdRegex.test(entityId.toString()) && entityId !== "ENCRYPTED") {
       throw new Error(`Invalid entity ID '${entityId}'!'`);
     }
   }
