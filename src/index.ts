@@ -1,4 +1,4 @@
-import Arweave from "arweave";
+import Arweave from "arweave/node/common";
 
 import {
   ArFSDriveEntity,
@@ -16,7 +16,10 @@ import {
   GetPublicFolderParams,
   ListPublicFolderParams,
 } from "./types/arfs/common";
-import { ASCENDING_ORDER, GQLEdgeInterface } from "./types/gql";
+import GQLResultInterface, {
+  ASCENDING_ORDER,
+  GQLEdgeInterface,
+} from "./types/gql";
 import {
   buildQuery,
   gatewayUrlForArweave,
@@ -40,9 +43,6 @@ import {
 import { defaultArFSClientCache } from "./types/arfs/cache";
 
 interface ArFSClientType {
-  readonly _arweave: Arweave;
-  readonly appName: string;
-  readonly appVersion: string;
 
   getOwnerForDriveId(driveId: EntityID): Promise<ArweaveAddress>;
   // public functions
@@ -523,4 +523,14 @@ class ArFSClient implements ArFSClientType {
   }
 }
 
-export { ArFSClient, ArFSClientType, ArweaveAddress, PrivateKeyData };
+export {
+  ArFSClient,
+  ArFSClientType,
+  ArweaveAddress,
+  PrivateKeyData,
+  EntityID,
+  GQLResultInterface,
+  ArFSDriveEntity,
+  ArFSPublicFolder,
+  ArFSPublicFile,
+};

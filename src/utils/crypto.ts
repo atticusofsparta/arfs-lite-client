@@ -341,7 +341,7 @@ export async function decryptText(
     const decoder = new TextDecoder();
     return decoder.decode(decrypted);
   } catch (err) {
-    console.error(err)
+    console.error(err);
     return "ERROR";
   }
 }
