@@ -8,7 +8,7 @@ import { ArFSPublicFolder } from "./folder";
 import { ArFSPublicFile } from "./file";
 
 export interface ArFSPublicDriveCacheKey {
-  driveId: EntityID;
+  driveId: EntityID | string;
   owner: ArweaveAddress;
 }
 
@@ -51,11 +51,47 @@ export class ArFSEntityIDBCache<K, V> {
     });
   }
 
-  cacheKeyString(key: K): string {
-    // Note: This implementation may not sufficiently differentiate keys
-    // for certain object types depending on their toJSON implementation
-    return typeof key === "string" ? key : JSON.stringify(key);
+  cacheKeyString(key: any): string {
+    if (typeof key === "string") {
+      return key;
+    }
+    if (key instanceof EntityID || key instanceof ArweaveAddress) {
+      return key.toString();
+    }
+    if ('driveId' in key) {
+      const driveId = typeof key.driveId === "string" ? key.driveId : key.driveId.toString();
+      if (key.owner) {
+        return JSON.stringify({ driveId, owner: key.owner });
+      } else {
+        return JSON.stringify({ driveId });
+      }
+    }
+  
+    if ('folderId' in key) {
+      const folderId = key.folderId.toString();
+      if (key.owner) {
+        return JSON.stringify({ folderId, owner: key.owner });
+      } else {
+        return JSON.stringify({ folderId });
+      }
+    }
+  
+    if ('fileId' in key) {
+      const fileId = key.fileId.toString();
+      if (key.owner) {
+        return JSON.stringify({ fileId, owner: key.owner });
+      } else {
+        return JSON.stringify({ fileId });
+      }
+    }
+    if ('entityId' in key) {
+      return key.entityId.toString();
+    }
+  
+    throw new Error(`Unsupported cache key type: ${typeof key} : ${JSON.stringify(key)}`);
   }
+  
+  
 
   async initDatabase(capacity: number): Promise<IDBDatabase> {
     const dbName = "arfs-entity-cache-db";
@@ -86,6 +122,7 @@ export class ArFSEntityIDBCache<K, V> {
   async put(key: K, value: V): Promise<V> {
     const cacheKey = this.cacheKeyString(key);
     const db = await this.dbPromise;
+    console.log("put", {cacheKey})
 
     return new Promise<V>((resolve, reject) => {
       const transaction = db.transaction("cache", "readwrite");
@@ -110,6 +147,8 @@ export class ArFSEntityIDBCache<K, V> {
   async get(key: K): Promise<V | undefined> {
     const cacheKey = this.cacheKeyString(key);
     const db = await this.dbPromise;
+
+    console.log("get", {cacheKey})
 
     return new Promise<V | undefined>((resolve, reject) => {
       const transaction = db.transaction("cache", "readonly");

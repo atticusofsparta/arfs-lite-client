@@ -53,41 +53,33 @@ export function encodeArrayBufferToBase64(buffer: Uint8Array): string {
   return btoa(binary);
 }
 
-export function buildQuery({
-  tags = [],
-  cursor,
-  owner,
-  sort = DESCENDING_ORDER,
-  ids,
-}: BuildGQLQueryParams): GQLQuery {
-  let queryTags = ``;
+export function buildQuery({ tags = [], cursor, owner, sort = DESCENDING_ORDER, ids }: BuildGQLQueryParams): GQLQuery {
+	let queryTags = ``;
 
-  tags.forEach((t) => {
-    queryTags = `${queryTags}
-				{ name: "${t.name}", values: ${
-          Array.isArray(t.value) ? JSON.stringify(t.value) : `"${t.value}"`
-        } }`;
-  });
+	tags.forEach((t) => {
+		queryTags = `${queryTags}
+				{ name: "${t.name}", values: ${Array.isArray(t.value) ? `[${t.value.map((v)=>`"${ v.toString()}"`)}]` : `["${t.value.toString()}"]`} }`;
+	});
 
-  const singleResult = cursor === undefined;
+	const singleResult = cursor === undefined;
 
-  return {
-    query: `query {
+	return {
+		query: `query {
 			transactions(
-				${ids?.length ? `ids: [${ids.map((id) => `"${id}"`)}]` : ""}
+				${ids?.length ? `ids: [${ids.map((id) => `"${id}"`)}]` : ''}
 				first: ${singleResult ? latestResult : pageLimit}
 				sort: ${sort}
-				${singleResult ? "" : `after: "${cursor}"`}
-				${owner === undefined ? "" : `owners: ["${owner}"]`}
+				${singleResult ? '' : `after: "${cursor}"`}
+				${owner === undefined ? '' : `owners: ["${owner.toString()}"]`}
 				tags: [
 					${queryTags}
 				]
 			) {
-				${singleResult ? "" : pageInfoFragment}
+				${singleResult ? '' : pageInfoFragment}
 				${edgesFragment(singleResult)}
 			}
-		}`,
-  };
+		}`
+	};
 }
 
 /** Computes the size of a private file encrypted with AES256-GCM */
