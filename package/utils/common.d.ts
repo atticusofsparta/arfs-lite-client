@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { ByteCount } from "src/types/common";
 import { BuildGQLQueryParams, CustomMetaDataGqlTags, CustomMetaDataJsonFields, GQLQuery } from "src/types/gql";
 import Arweave from "arweave";
@@ -6,8 +5,9 @@ import { JsonSerializable } from "src/types/arweave";
 import { ArFSFileOrFolderEntity, CustomMetaData, EntityID, UnixTime } from "src/types/arfs/common";
 import { ArFSDriveEntity } from "src/types/arfs/drive";
 import { ArFSPrivateFile, ArFSPrivateFolder, ArFSPublicFile, ArFSPublicFileWithPaths, ArFSPublicFolder, ArFSPublicFolderWithPaths, FolderHierarchy } from "src/types/arfs";
-export declare function urlEncodeHashKey(keyBuffer: Buffer): string;
-export declare function buildQuery({ tags, cursor, owner, sort, ids, }: BuildGQLQueryParams): GQLQuery;
+export declare function urlEncodeHashKey(keyBuffer: Uint8Array): string;
+export declare function encodeArrayBufferToBase64(buffer: Uint8Array): string;
+export declare function buildQuery({ tags, cursor, owner, sort, ids }: BuildGQLQueryParams): GQLQuery;
 /** Computes the size of a private file encrypted with AES256-GCM */
 export declare function encryptedDataSize(dataSize: ByteCount): ByteCount;
 /** Derives gateway URL from provided Arweave instance */
@@ -70,3 +70,4 @@ export interface FileConflictInfo {
 export declare function entityToNameMap(entity: ArFSFileOrFolderEntity<"file" | "folder">): string;
 export declare function folderToNameAndIdMap(entity: ArFSFileOrFolderEntity<"folder">): FolderNameAndId;
 export declare function fileConflictInfoMap(entity: ArFSFileOrFolderEntity<"file">): FileConflictInfo;
+export declare function encodeStringToArrayBuffer(str: string): ArrayBuffer;

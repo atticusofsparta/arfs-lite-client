@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { EntityID, EntityKey } from "./arfs";
 import { Equatable } from "./common";
 import { JWKInterface } from "arweave/node/lib/wallet";
@@ -35,13 +34,13 @@ export declare class PrivateKeyData {
     private unverifiedDriveKeys;
     constructor({ password, driveKeys, wallet }: PrivateKeyDataParams);
     /** Safely decrypts a private data buffer into a decrypted transaction data */
-    safelyDecryptToJson<T extends EntityMetaDataTransactionData>(cipherIV: string, driveId: EntityID, dataBuffer: Buffer, placeholder: T): Promise<T>;
+    safelyDecryptToJson<T extends EntityMetaDataTransactionData>(cipherIV: string, driveId: EntityID, dataBuffer: Uint8Array, placeholder: T): Promise<T>;
     /**
      * Decrypts a private data buffer into a decrypted transaction data
      *
      * @throws when the provided driveKey or cipher fails to decrypt the transaction data
      */
-    decryptToJson<T extends EntityMetaDataTransactionData>(cipherIV: string, encryptedDataBuffer: Buffer, driveKey: EntityKey): Promise<T>;
+    decryptToJson<T extends EntityMetaDataTransactionData>(cipherIV: string, encryptedDataBuffer: Uint8Array, driveKey: EntityKey): Promise<T>;
     /** Synchronously returns a driveKey from the cache by its driveId */
     driveKeyForDriveId(driveId: EntityID): EntityKey | false;
 }

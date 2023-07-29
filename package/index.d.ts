@@ -1,27 +1,31 @@
-import Arweave from "arweave";
+import Arweave from "arweave/node/common";
 import { ArFSDriveEntity, ArFSPublicDrive } from "./types/arfs/drive";
 import { ArweaveAddress, PrivateKeyData } from "./types/arweave";
 import { ArFSAllPublicFoldersOfDriveParams, EntityID, GetPublicDriveParams, GetPublicFileParams, GetPublicFolderParams, ListPublicFolderParams } from "./types/arfs/common";
+import GQLResultInterface from "./types/gql";
 import { GatewayAPI } from "./types/common";
 import { ArFSListPublicFolderParams, ArFSPublicFolder, ArFSPublicFolderWithPaths } from "./types/arfs/folder";
 import { ArFSPublicFile, ArFSPublicFileWithPaths } from "./types/arfs/file";
 import { defaultArFSClientCache } from "./types/arfs/cache";
-export interface ArFSClientType {
-    readonly _arweave: Arweave;
-    readonly appName: string;
-    readonly appVersion: string;
+interface ArFSClientType {
     getOwnerForDriveId(driveId: EntityID): Promise<ArweaveAddress>;
     getPublicDrive({ driveId, owner, }: GetPublicDriveParams): Promise<ArFSPublicDrive>;
     getPublicFolder({ folderId, owner, }: GetPublicFolderParams): Promise<ArFSPublicFolder>;
     getPublicFile({ fileId, owner, }: GetPublicFileParams): Promise<ArFSPublicFile>;
     getAllDrivesForAddress({ address, privateKeyData, latestRevisionsOnly, }: {
-        address: ArweaveAddress;
+        address: string;
         privateKeyData: PrivateKeyData;
         latestRevisionsOnly?: boolean;
     }): Promise<ArFSDriveEntity[]>;
     listPublicFolder({ folderId, maxDepth, includeRoot, owner, }: ListPublicFolderParams): Promise<(ArFSPublicFolderWithPaths | ArFSPublicFileWithPaths)[]>;
+    getAllFoldersOfPublicDrive({ driveId, owner, latestRevisionsOnly, }: ArFSAllPublicFoldersOfDriveParams): Promise<ArFSPublicFolder[]>;
+    getPublicFilesWithParentFolderIds({ folderIDs, owner, latestRevisionsOnly, }: {
+        folderIDs: EntityID[];
+        owner: ArweaveAddress;
+        latestRevisionsOnly?: boolean;
+    }): Promise<ArFSPublicFile[]>;
 }
-export declare class ArFSClient implements ArFSClientType {
+declare class ArFSClient implements ArFSClientType {
     protected caches: import("./types/arfs/cache").ArFSClientCache;
     protected gatewayApi: GatewayAPI;
     _arweave: Arweave;
@@ -50,11 +54,15 @@ export declare class ArFSClient implements ArFSClientType {
         owner: ArweaveAddress;
     }): Promise<ArFSPublicFile>;
     getAllDrivesForAddress({ address, privateKeyData, latestRevisionsOnly, }: {
-        address: ArweaveAddress;
+        address: string;
         privateKeyData: PrivateKeyData;
         latestRevisionsOnly?: boolean;
     }): Promise<ArFSDriveEntity[]>;
-    getPublicFilesWithParentFolderIds(folderIDs: EntityID[], owner: ArweaveAddress, latestRevisionsOnly?: boolean): Promise<ArFSPublicFile[]>;
+    getPublicFilesWithParentFolderIds({ folderIDs, owner, latestRevisionsOnly, }: {
+        folderIDs: EntityID[];
+        owner: ArweaveAddress;
+        latestRevisionsOnly?: boolean;
+    }): Promise<ArFSPublicFile[]>;
     getAllFoldersOfPublicDrive({ driveId, owner, latestRevisionsOnly, }: ArFSAllPublicFoldersOfDriveParams): Promise<ArFSPublicFolder[]>;
     /**
      * Lists the children of certain public folder
@@ -65,3 +73,4 @@ export declare class ArFSClient implements ArFSClientType {
      */
     listPublicFolder({ folderId, maxDepth, includeRoot, owner, }: ArFSListPublicFolderParams): Promise<(ArFSPublicFolderWithPaths | ArFSPublicFileWithPaths)[]>;
 }
+export { ArFSClient, ArFSClientType, ArweaveAddress, PrivateKeyData, EntityID, GQLResultInterface, ArFSDriveEntity, ArFSPublicFolder, ArFSPublicFile, ArFSPublicDrive };

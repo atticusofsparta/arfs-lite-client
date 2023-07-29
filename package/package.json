@@ -1,6 +1,8 @@
 {
   "name": "@atticusofsparta/arfs-lite-client",
-  "version": "1.0.0",
+  "version": "1.1.1",
+  "access": "public",
+  "repository": "",
   "description": "",
   "main": "index.js",
   "module": "index.m.js",
@@ -9,6 +11,22 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@types/jwk-to-pem": "^2.0.1",
+    "@types/mime-types": "^2.1.1",
+    "@types/utf8": "^3.0.1",
+    "@types/uuid": "^9.0.2",
+    "arweave": "1.13.7",
+    "axios": "^1.4.0",
+    "base64-js": "^1.5.1",
+    "bignumber.js": "^9.1.1",
+    "futoin-hkdf": "^1.5.2",
+    "jwk-to-pem": "^2.0.5",
+    "mime-types": "^2.1.35",
+    "prettier": "^3.0.0",
+    "utf8": "^3.0.0",
+    "uuid": "^9.0.0"
   },
   "author": "",
   "license": "ISC"

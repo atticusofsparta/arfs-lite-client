@@ -68,8 +68,8 @@ export declare class UnixTime implements Equatable<UnixTime> {
     toJSON(): number;
 }
 export declare class EntityKey {
-    readonly keyData: Buffer;
-    constructor(keyData: Buffer);
+    readonly keyData: Uint8Array;
+    constructor(keyData: Uint8Array);
     toString(): string;
     toJSON(): string;
 }
@@ -142,7 +142,7 @@ export declare abstract class ArFSMetadataEntityBuilder<T extends ArFSEntity> {
     constructor({ entityId, gatewayApi, owner, }: ArFSMetadataEntityBuilderParams);
     abstract getGqlQueryParameters(): GQLTagInterface[];
     protected abstract buildEntity(): Promise<T>;
-    getDataForTxID(txId: ArweaveAddress): Promise<Buffer>;
+    getDataForTxID(txId: ArweaveAddress): Promise<Uint8Array>;
     /**
      * Parses data for builder fields from either the provided GQL tags, or from a fresh request to Arweave for tag data
      *
@@ -541,7 +541,7 @@ export declare abstract class ArFSBaseEntityToUpload {
 }
 export declare abstract class ArFSDataToUpload extends ArFSBaseEntityToUpload {
     abstract gatherFileInfo(): FileInfo;
-    abstract getFileDataBuffer(): Promise<Buffer>;
+    abstract getFileDataBuffer(): Promise<ArrayBuffer>;
     abstract readonly contentType: string;
     abstract readonly lastModifiedDate: UnixTime;
     abstract readonly size: ByteCount;
@@ -560,7 +560,7 @@ export declare class ArFSManifestToUpload extends ArFSDataToUpload {
     gatherFileInfo(): FileInfo;
     get contentType(): string;
     getBaseName(): string;
-    getFileDataBuffer(): Promise<Buffer>;
+    getFileDataBuffer(): Promise<Uint8Array>;
     get size(): ByteCount;
     get lastModifiedDate(): UnixTime;
 }

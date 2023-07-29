@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { ArweaveAddress, EntityMetaDataTransactionData } from "../arweave";
 import { ByteCount, GatewayAPI } from "../common";
 import { CustomMetaDataGqlTags, CustomMetaDataJsonFields, GQLNodeInterface, GQLTagInterface } from "../gql";
@@ -87,7 +86,7 @@ export declare class ArFSFileToUpload extends ArFSDataToUpload {
     gatherFileInfo(): FileInfo;
     get size(): ByteCount;
     get lastModifiedDate(): UnixTime;
-    getFileDataBuffer(): Promise<Buffer>;
+    getFileDataBuffer(): Promise<Uint8Array>;
     get contentType(): string;
     getBaseName(): BaseName;
     /** Computes the size of a private file encrypted with AES256-GCM */

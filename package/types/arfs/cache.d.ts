@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { ArweaveAddress } from "../arweave";
 import Arweave from "arweave";
 import { EntityID } from "./common";
@@ -6,7 +5,7 @@ import { ArFSPublicDrive } from "./drive";
 import { ArFSPublicFolder } from "./folder";
 import { ArFSPublicFile } from "./file";
 export interface ArFSPublicDriveCacheKey {
-    driveId: EntityID;
+    driveId: EntityID | string;
     owner: ArweaveAddress;
 }
 export interface ArFSPublicFolderCacheKey {
@@ -29,9 +28,9 @@ export declare class ArFSEntityIDBCache<K, V> {
     private cache;
     private _gatewayApi;
     constructor(capacity: number, arweave?: Arweave);
-    cacheKeyString(key: K): string;
+    cacheKeyString(key: any): string;
     initDatabase(capacity: number): Promise<IDBDatabase>;
-    put(key: K, value: Promise<V>): Promise<V>;
+    put(key: K, value: V): Promise<V>;
     get(key: K): Promise<V | undefined>;
     remove(key: K): Promise<void>;
     clear(): Promise<void>;
@@ -46,8 +45,8 @@ export declare class ArFSMetadataIDBCache {
     private static platformCacheFolder;
     private static initDatabase;
     static getCacheFolder(): Promise<string>;
-    static put(txId: ArweaveAddress, buffer: Buffer): Promise<void>;
-    static get(txId: ArweaveAddress): Promise<Buffer | undefined>;
+    static put(txId: ArweaveAddress, buffer: Uint8Array): Promise<void>;
+    static get(txId: ArweaveAddress): Promise<Uint8Array | undefined>;
     private static getDatabase;
 }
 export declare const defaultArFSClientCache: ArFSClientCache;

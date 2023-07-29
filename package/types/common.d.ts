@@ -1,4 +1,3 @@
-/// <reference types="node" />
 export type UnionOfObjectPropertiesType<T extends {
     [key: string]: string | number;
 }> = T[keyof T];
@@ -51,7 +50,7 @@ export declare class GatewayAPI {
      *
      * @remarks Will use data from `ArFSMetadataCache` if it exists and will cache any fetched data
      * */
-    getTxData(txId: ArweaveAddress): Promise<Buffer>;
+    getTxData(txId: ArweaveAddress): Promise<Uint8Array>;
     /**
      * Retries the given request until the response returns a successful
      * status code or the maxRetries setting has been exceeded
