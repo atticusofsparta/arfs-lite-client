@@ -25,6 +25,9 @@ import {
   gatewayUrlForArweave,
   latestRevisionFilter,
   latestRevisionFilterForDrives,
+  parseCachedDrive,
+  parseCachedFile,
+  parseCachedFolder,
   publicEntityWithPathsFactory,
 } from "./utils/common";
 import { GatewayAPI } from "./types/common";
@@ -138,9 +141,9 @@ class ArFSClient implements ArFSClientType {
   }
 
   public async getOwnerForDriveId(driveId: EntityID): Promise<ArweaveAddress> {
-    const cachedOwner = await this.caches.ownerCache.get(driveId);
+    const cachedOwner = await this.caches.ownerCache.get(driveId) as unknown as any;
     if (cachedOwner) {
-      return cachedOwner;
+      return new ArweaveAddress(cachedOwner?.address);
     }
 
     const newDriveId = async () => {
@@ -173,7 +176,6 @@ class ArFSClient implements ArFSClientType {
     entityId: EntityID,
     gqlTypeTag: "File-Id" | "Folder-Id",
   ): Promise<EntityID> {
-    console.log("getDriveIDForEntityId : get", entityId)
     const cachedDriveID = await this.caches.driveIdCache.get(entityId);
     if (cachedDriveID) {
       return cachedDriveID;
@@ -181,7 +183,7 @@ class ArFSClient implements ArFSClientType {
 
     const newEntityId = await (async () => {
       const gqlQuery = buildQuery({
-        tags: [{ name: gqlTypeTag, value: `${entityId}` }],
+        tags: [{ name: gqlTypeTag, value: `${entityId.toString()}` }],
       });
 
       const transactions = await this.gatewayApi.gqlRequest(gqlQuery);
@@ -200,8 +202,6 @@ class ArFSClient implements ArFSClientType {
         `No Drive-Id tag found for meta data transaction of ${gqlTypeTag}: ${entityId.toString()}`,
       );
     });
-
-    console.log("getDriveIDForEntityId : put", entityId)
 
     return await this.caches.driveIdCache.put(entityId, await newEntityId());
   }
@@ -236,8 +236,9 @@ class ArFSClient implements ArFSClientType {
   }): Promise<ArFSPublicDrive> {
     const cacheKey = { driveId: driveId.toString(), owner };
     const cachedDrive = await this.caches.publicDriveCache.get(cacheKey);
+    
     if (cachedDrive) {
-      return cachedDrive;
+      return parseCachedDrive(cachedDrive);
     }
     return await this.caches.publicDriveCache.put(
       cacheKey,
@@ -258,12 +259,10 @@ class ArFSClient implements ArFSClientType {
     owner: ArweaveAddress;
   }): Promise<ArFSPublicFolder> {
     const cacheKey = { folderId, owner };
-    console.log("getPublicFolder : get", {cacheKey})
     const cachedFolder = await this.caches.publicFolderCache.get(cacheKey);
     if (cachedFolder) {
-      return cachedFolder;
+      return parseCachedFolder(cachedFolder);
     }
-    console.log("getPublicFolder : put", {cacheKey})
     return await this.caches.publicFolderCache.put(
       cacheKey,
       await new ArFSPublicFolderBuilder({
@@ -282,12 +281,10 @@ class ArFSClient implements ArFSClientType {
     owner: ArweaveAddress;
   }): Promise<ArFSPublicFile> {
     const cacheKey = { fileId, owner };
-    console.log("getPublicFile : get", {cacheKey})
     const cachedFile = await this.caches.publicFileCache.get(cacheKey);
     if (cachedFile) {
-      return cachedFile;
+      return parseCachedFile(cachedFile);
     }
-    console.log("getPublicFile : put", {cacheKey})
     return await this.caches.publicFileCache.put(
       cacheKey,
       await new ArFSPublicFileBuilder({

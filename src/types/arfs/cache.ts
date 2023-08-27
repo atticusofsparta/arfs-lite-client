@@ -1,4 +1,4 @@
-import { gatewayUrlForArweave } from "src/utils/common";
+import { gatewayUrlForArweave, isJsonSerializable } from "src/utils/common";
 import { ArweaveAddress } from "../arweave";
 import { GatewayAPI } from "../common";
 import Arweave from "arweave";
@@ -101,7 +101,6 @@ export class ArFSEntityIDBCache<K, V> {
       const request = indexedDB.open(dbName, version);
 
       request.onerror = (event) => {
-        console.debug(event);
         reject(request.error);
       };
 
@@ -113,7 +112,6 @@ export class ArFSEntityIDBCache<K, V> {
       };
 
       request.onsuccess = (event) => {
-        console.debug(event);
         resolve(request.result);
       };
     });
@@ -122,7 +120,6 @@ export class ArFSEntityIDBCache<K, V> {
   async put(key: K, value: V): Promise<V> {
     const cacheKey = this.cacheKeyString(key);
     const db = await this.dbPromise;
-    console.log("put", {cacheKey})
 
     return new Promise<V>((resolve, reject) => {
       const transaction = db.transaction("cache", "readwrite");
@@ -138,7 +135,6 @@ export class ArFSEntityIDBCache<K, V> {
       };
 
       request.onerror = (event) => {
-        console.debug("Error putting in entity cache");
         reject(request.error);
       };
     });
@@ -147,8 +143,6 @@ export class ArFSEntityIDBCache<K, V> {
   async get(key: K): Promise<V | undefined> {
     const cacheKey = this.cacheKeyString(key);
     const db = await this.dbPromise;
-
-    console.log("get", {cacheKey})
 
     return new Promise<V | undefined>((resolve, reject) => {
       const transaction = db.transaction("cache", "readonly");
@@ -191,7 +185,6 @@ export class ArFSEntityIDBCache<K, V> {
             resolve();
           };
           deleteRequest.onerror = () => {
-            console.debug(event);
             reject(deleteRequest.error);
           };
         } else {
@@ -200,7 +193,6 @@ export class ArFSEntityIDBCache<K, V> {
       };
 
       request.onerror = (event) => {
-        console.debug(event);
         reject(request.error);
       };
     });
@@ -216,12 +208,10 @@ export class ArFSEntityIDBCache<K, V> {
       const request = objectStore.clear();
 
       request.onsuccess = (event) => {
-        console.debug(event);
         resolve();
       };
 
       request.onerror = (event) => {
-        console.debug(event);
         reject(request.error);
       };
     });
@@ -237,12 +227,10 @@ export class ArFSEntityIDBCache<K, V> {
       const request = objectStore.count();
 
       request.onsuccess = (event) => {
-        console.debug(event);
         resolve(request.result);
       };
 
       request.onerror = (event) => {
-        console.debug(event);
         reject(request.error);
       };
     });
@@ -269,7 +257,6 @@ export class ArFSMetadataIDBCache {
       const request = indexedDB.open(dbName, version);
 
       request.onerror = (event) => {
-        console.debug(event);
         reject(request.error);
       };
 
@@ -281,7 +268,6 @@ export class ArFSMetadataIDBCache {
       };
 
       request.onsuccess = (event) => {
-        console.debug(event);
         resolve(request.result);
       };
     });
@@ -312,12 +298,10 @@ export class ArFSMetadataIDBCache {
       });
 
       request.onsuccess = (event) => {
-        console.debug(event);
         resolve();
       };
 
       request.onerror = (event) => {
-        console.debug(event);
         reject(request.error);
       };
     });
@@ -336,7 +320,6 @@ export class ArFSMetadataIDBCache {
       request.onsuccess = (event) => {
         const result = request.result;
         if (result) {
-          console.debug(event, result);
           resolve(result.buffer);
         } else {
           resolve(undefined);
@@ -344,7 +327,6 @@ export class ArFSMetadataIDBCache {
       };
 
       request.onerror = (event) => {
-        console.debug(event);
         reject(request.error);
       };
     });

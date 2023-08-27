@@ -1,6 +1,6 @@
 // A Drive is a logical grouping of folders and files. All folders and files must be part of a drive, and reference the Drive ID.
 // When creating a Drive, a corresponding folder must be created as well. This folder will act as the Drive Root Folder.
-import { v4 as uuidv4, v4 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import { JWKInterface } from "arweave/node/lib/wallet";
 import {
   ENCRYPTED_DATA_PLACEHOLDER,

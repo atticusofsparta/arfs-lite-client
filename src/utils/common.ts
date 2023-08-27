@@ -1,4 +1,5 @@
 import {
+  ROOT_FOLDER_ID_PLACEHOLDER,
   authTagLength,
   defaultGatewayHost,
   defaultGatewayProtocol,
@@ -17,7 +18,7 @@ import {
   pageLimit,
 } from "src/types/gql";
 import Arweave from "arweave";
-import { JsonSerializable } from "src/types/arweave";
+import { ArweaveAddress, JsonSerializable } from "src/types/arweave";
 import {
   ArFSFileOrFolderEntity,
   ArFSTagSettings,
@@ -27,7 +28,7 @@ import {
 } from "src/types/arfs/common";
 import * as B64js from "base64-js";
 import * as mime from "mime-types";
-import { ArFSDriveEntity } from "src/types/arfs/drive";
+import { ArFSDriveEntity, ArFSPublicDrive } from "src/types/arfs/drive";
 import {
   ArFSPrivateFile,
   ArFSPrivateFolder,
@@ -36,6 +37,7 @@ import {
   ArFSPublicFolder,
   ArFSPublicFolderWithPaths,
   FolderHierarchy,
+  RootFolderID,
 } from "src/types/arfs";
 
 export function urlEncodeHashKey(keyBuffer: Uint8Array): string {
@@ -391,3 +393,81 @@ export function encodeStringToArrayBuffer(str: string): ArrayBuffer {
   const encoder = new TextEncoder();
   return encoder.encode(str).buffer;
 }
+
+export function parseCachedDrive (cachedDrive:any): ArFSPublicDrive {
+  let cacheClone = {...cachedDrive};
+  cacheClone.driveId = new EntityID(cacheClone.driveId.entityId);
+  cacheClone.owner =  cacheClone.owner?.address?.length ? new ArweaveAddress(cacheClone.owner.address) : undefined;
+  cacheClone.rootFolderId = new EntityID(cacheClone.rootFolderId);
+
+  return new ArFSPublicDrive(
+    cacheClone.appName,
+    cacheClone.appVersion,
+    cacheClone.arFS,
+    cacheClone.contentType,
+    cacheClone.driveId,
+    cacheClone.entityType,
+    cacheClone.name,
+    cacheClone.txId,
+    cacheClone.unixTime,
+    cacheClone.drivePrivacy,
+    cacheClone.rootFolderId,
+    cacheClone?.customMetaData?.metaDataGqlTags,
+    cacheClone?.customMetaData?.metaDataJson,
+  );
+}
+
+export function parseCachedFolder (cachedFolder:any): ArFSPublicFolder {
+  let cacheClone = {...cachedFolder};
+  cacheClone.driveId = new EntityID(cacheClone.driveId.entityId);
+  cacheClone.entityId = new EntityID(cacheClone.entityId.entityId);
+  cacheClone.owner = cacheClone.owner?.address?.length ? new ArweaveAddress(cacheClone.owner.address) : undefined;
+  cacheClone.parentFolderId = cacheClone.parentFolderId.entityId === ROOT_FOLDER_ID_PLACEHOLDER ? new RootFolderID() : new EntityID(cacheClone.parentFolderId.entityId);
+
+  return new ArFSPublicFolder(
+    cacheClone.appName,
+    cacheClone.appVersion,
+    cacheClone.arFS,
+    cacheClone.contentType,
+    cacheClone.driveId,
+    cacheClone.name,
+    cacheClone.txId,
+    cacheClone.unixTime,
+    cacheClone.parentFolderId,
+    cacheClone.entityId,
+    cacheClone?.customMetaData?.metaDataGqlTags,
+    cacheClone?.customMetaData?.metaDataJson,
+  )
+}
+
+export function parseCachedFile (cachedFile:any): ArFSPublicFile {
+  let cacheClone = {...cachedFile};
+  cacheClone.driveId = new EntityID(cacheClone.driveId.entityId);
+  cacheClone.entityId = new EntityID(cacheClone.entityId.entityId);
+  cacheClone.owner = cacheClone.owner?.address?.length ? new ArweaveAddress(cacheClone.owner.address) : undefined;
+  cacheClone.parentFolderId = cacheClone.parentFolderId.entityId === ROOT_FOLDER_ID_PLACEHOLDER ? new RootFolderID() : new EntityID(cacheClone.parentFolderId.entityId);
+  cacheClone.txId = new ArweaveAddress(cacheClone.txId.address);
+  cacheClone.dataTxId = new ArweaveAddress(cacheClone.dataTxId.address);
+
+
+  return new ArFSPublicFile(
+    cacheClone.appName,
+    cacheClone.appVersion,
+    cacheClone.arFS,
+    cacheClone.contentType,
+    cacheClone.driveId,
+    cacheClone.name,
+    cacheClone.txId,
+    cacheClone.unixTime,
+    cacheClone.parentFolderId,
+    cacheClone.entityId,
+    cacheClone.size,
+    cacheClone.lastModifiedDate,
+    cacheClone.dataTxId,
+    cacheClone.dataContentType,
+    cacheClone?.customMetaData?.metaDataGqlTags,
+    cacheClone?.customMetaData?.metaDataJson,
+  )
+}
+
+
