@@ -398,7 +398,8 @@ export function parseCachedDrive (cachedDrive:any): ArFSPublicDrive {
   let cacheClone = {...cachedDrive};
   cacheClone.driveId = new EntityID(cacheClone.driveId.entityId);
   cacheClone.owner =  cacheClone.owner?.address?.length ? new ArweaveAddress(cacheClone.owner.address) : undefined;
-  cacheClone.rootFolderId = new EntityID(cacheClone.rootFolderId);
+  cacheClone.rootFolderId = new EntityID( typeof cacheClone.rootFolderId === 'string' ? cacheClone.rootFolderId : cacheClone.rootFolderId.entityId);
+  cacheClone.unixTime = new UnixTime(typeof cacheClone.unixTime === "number" ? cacheClone.unixTime : cacheClone.unixTime.unixTime);
 
   return new ArFSPublicDrive(
     cacheClone.appName,
@@ -423,6 +424,7 @@ export function parseCachedFolder (cachedFolder:any): ArFSPublicFolder {
   cacheClone.entityId = new EntityID(cacheClone.entityId.entityId);
   cacheClone.owner = cacheClone.owner?.address?.length ? new ArweaveAddress(cacheClone.owner.address) : undefined;
   cacheClone.parentFolderId = cacheClone.parentFolderId.entityId === ROOT_FOLDER_ID_PLACEHOLDER ? new RootFolderID() : new EntityID(cacheClone.parentFolderId.entityId);
+  cacheClone.unixTime = new UnixTime(typeof cacheClone.unixTime === "number" ? cacheClone.unixTime : cacheClone.unixTime.unixTime);
 
   return new ArFSPublicFolder(
     cacheClone.appName,
@@ -448,7 +450,8 @@ export function parseCachedFile (cachedFile:any): ArFSPublicFile {
   cacheClone.parentFolderId = cacheClone.parentFolderId.entityId === ROOT_FOLDER_ID_PLACEHOLDER ? new RootFolderID() : new EntityID(cacheClone.parentFolderId.entityId);
   cacheClone.txId = new ArweaveAddress(cacheClone.txId.address);
   cacheClone.dataTxId = new ArweaveAddress(cacheClone.dataTxId.address);
-
+  cacheClone.unixTime = new UnixTime(typeof cacheClone.unixTime === "number" ? cacheClone.unixTime : cacheClone.unixTime.unixTime);
+  cacheClone.size = new ByteCount(typeof cacheClone.size === "number" ? cacheClone.size : cacheClone.size.byteCount);
 
   return new ArFSPublicFile(
     cacheClone.appName,
